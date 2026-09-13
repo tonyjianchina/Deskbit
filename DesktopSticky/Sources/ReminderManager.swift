@@ -178,7 +178,7 @@ final class ReminderManager: NSObject, UNUserNotificationCenterDelegate {
         center.removePendingNotificationRequests(withIdentifiers: [note.id])
 
         let content = UNMutableNotificationContent()
-        content.title = "Desktop Sticky"
+        content.title = "Deskbit"
         let body = note.content.isEmpty ? "到点提醒" : note.content
         content.body = "Remember: \(body)"
         content.sound = .default

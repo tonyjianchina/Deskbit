@@ -5,15 +5,15 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>zh_CN</string>
 	<key>CFBundleDisplayName</key>
-	<string>Desktop Sticky</string>
+	<string>Deskbit</string>
 	<key>CFBundleExecutable</key>
-	<string>DesktopSticky</string>
+	<string>Deskbit</string>
 	<key>CFBundleIdentifier</key>
 	<string>com.codex.desktopsticky</string>
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>
-	<string>Desktop Sticky</string>
+	<string>Deskbit</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
@@ -33,6 +33,6 @@
 	<key>LSUIElement</key>
 	<true/>
 	<key>NSHumanReadableCopyright</key>
-	<string>Copyright © 2026 Desktop Sticky.</string>
+	<string>Copyright © 2026 Deskbit.</string>
 </dict>
 </plist>

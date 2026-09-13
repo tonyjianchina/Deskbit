@@ -1,10 +1,10 @@
 #!/bin/bash
-# 编译并打包 Desktop Sticky macOS 便签应用
+# 编译并打包 Deskbit macOS 便签应用
 set -e
 cd "$(dirname "$0")"
 ROOT="$(pwd)"
 SRC="$ROOT/Sources"
-APP="$ROOT/dist/Desktop Sticky.app"
+APP="$ROOT/dist/Deskbit.app"
 
 echo "==> 清理旧构建"
 rm -rf "$ROOT/dist"
@@ -12,12 +12,14 @@ mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
 
 echo "==> 编译 Swift 源码"
 swiftc -O \
-  -o "$APP/Contents/MacOS/DesktopSticky" \
+  -o "$APP/Contents/MacOS/Deskbit" \
   "$SRC/main.swift" \
   "$SRC/AppDelegate.swift" \
   "$SRC/Note.swift" \
   "$SRC/NoteStore.swift" \
   "$SRC/NoteViewController.swift" \
+  "$SRC/SelectionOverlay.swift" \
+  "$SRC/ColorPalette.swift" \
   "$SRC/ReminderManager.swift" \
   -framework AppKit \
   -framework UserNotifications \

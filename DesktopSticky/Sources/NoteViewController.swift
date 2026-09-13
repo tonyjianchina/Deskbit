@@ -27,9 +27,16 @@ final class NoteViewController: NSViewController {
     var moveMode = false
     private var lastUpdateTick: Date = Date()
 
+    // 选中状态（框选）
+    private var isSelected = false
+
     // 提醒弹窗
     private var reminderPopover: NSPopover?
     private var reminderVC: ReminderPopoverViewController?
+
+    // 颜色选择弹窗
+    private var colorPopover: NSPopover?
+    private var colorVC: ColorPaletteViewController?
 
     var noteColor: Note.NoteColor { note.colorEnum }
     var currentNote: Note { note }
@@ -90,7 +97,7 @@ final class NoteViewController: NSViewController {
         // —— 顶栏右侧功能按钮 ——
         let buttons: [(String, String, String, Selector)] = [
             ("hand.draw",        "移动",  "切换拖动模式", #selector(toggleMoveMode(_:))),
-            ("paintpalette",     "背景色", "切换便签颜色", #selector(cycleColor(_:))),
+            ("paintpalette",     "背景色", "切换便签颜色", #selector(openColorPalette(_:))),
             ("plus",             "新增",  "新建便签",     #selector(newNote(_:))),
             ("pin",              "置顶",  "切换置顶",     #selector(togglePin(_:))),
             ("bell",             "提醒",  "设置提醒",     #selector(openReminder(_:))),
@@ -319,6 +326,16 @@ final class NoteViewController: NSViewController {
         statusLabel.stringValue = "已保存"
     }
 
+    /// 框选高亮
+    func setSelected(_ selected: Bool) {
+        guard isSelected != selected else { return }
+        isSelected = selected
+        if let root = view as? NoteBackgroundView {
+            root.selected = selected
+            root.needsDisplay = true
+        }
+    }
+
     // MARK: - 动作
 
     @objc private func toggleMoveMode(_ sender: Any?) {
@@ -327,11 +344,44 @@ final class NoteViewController: NSViewController {
         statusLabel.stringValue = moveMode ? "拖动模式：按住任意处移动" : "已保存"
     }
 
-    @objc private func cycleColor(_ sender: Any?) {
-        let all = Note.NoteColor.allCases
-        let next = all[(all.firstIndex(of: noteColor)! + 1) % all.count]
-        syncNote { $0.color = next.rawValue }
+    @objc private func openColorPalette(_ sender: Any?) {
+        guard view.window != nil else { return }
+        if colorPopover == nil {
+            let pop = NSPopover()
+            pop.behavior = .transient
+            pop.animates = true
+            colorPopover = pop
+        }
+        if colorVC == nil {
+            let vc = ColorPaletteViewController()
+            vc.onPick = { [weak self] picked in
+                self?.applyColor(picked)
+            }
+            colorVC = vc
+        }
+        colorVC!.selectedColor = noteColor
+        colorVC!.refreshSelection()
+        colorPopover!.contentViewController = colorVC
+        if let btn = button(withTip: "背景色") {
+            colorPopover!.show(relativeTo: btn.bounds, of: btn, preferredEdge: .minY)
+        }
+    }
+
+    private func applyColor(_ color: Note.NoteColor) {
+        syncNote { $0.color = color.rawValue }
         refreshColor()
+        colorPopover?.performClose(nil)
+    }
+
+    /// 按 tooltip 找到顶栏上的按钮
+    private func button(withTip tip: String) -> NSButton? {
+        for v in topBar.subviews {
+            guard let stack = v as? NSStackView else { continue }
+            for b in stack.arrangedSubviews {
+                if let btn = b as? NSButton, btn.toolTip == tip { return btn }
+            }
+        }
+        return nil
     }
 
     @objc private func newNote(_ sender: Any?) {
@@ -398,6 +448,7 @@ final class NoteViewController: NSViewController {
 
     @objc private func hideNote(_ sender: Any?) {
         syncNote { $0.hidden = true }
+        AppDelegate.shared.removeFromSelection(noteID)
         view.window?.orderOut(nil)
     }
 
@@ -411,6 +462,7 @@ final class NoteViewController: NSViewController {
         // 完成即收起：标记完成后自动隐藏，保持桌面干净
         if willComplete {
             syncNote { $0.hidden = true }
+            AppDelegate.shared.removeFromSelection(noteID)
             view.window?.orderOut(nil)
         } else {
             syncNote { $0.hidden = false }
@@ -495,6 +547,11 @@ final class NoteWindow: NSWindow, NSWindowDelegate {
         self.invalidateShadow()
     }
 
+    /// 框选高亮
+    func setSelected(_ selected: Bool) {
+        controller.setSelected(selected)
+    }
+
     /// 从数据还原位置（x/y 为左上角逻辑坐标）
     private func positionFromNote() {
         guard let screen = NSScreen.main else { return }
@@ -545,6 +602,7 @@ final class NoteWindow: NSWindow, NSWindowDelegate {
 final class NoteBackgroundView: NSView {
     var noteColor: Note.NoteColor = .yellow
     var completed: Bool = false
+    var selected: Bool = false
 
     override init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
@@ -570,6 +628,14 @@ final class NoteBackgroundView: NSView {
         let path = NSBezierPath(roundedRect: bounds.insetBy(dx: 0.5, dy: 0.5), xRadius: 14, yRadius: 14)
         path.lineWidth = 1
         path.stroke()
+
+        // 框选高亮：沿便签边缘描一圈系统强调色
+        if selected {
+            NSColor.controlAccentColor.setStroke()
+            let ring = NSBezierPath(roundedRect: bounds.insetBy(dx: 1, dy: 1), xRadius: 13, yRadius: 13)
+            ring.lineWidth = 2
+            ring.stroke()
+        }
     }
 }
 
@@ -580,7 +646,28 @@ final class NoteDragView: NSView {
 
     override func mouseDown(with event: NSEvent) {
         guard let window = window else { return }
+        let app = AppDelegate.shared
+        app.endGroupDrag() // 防御：清理可能残留的组拖动状态
+        // 拖拽已被选中的便签：整组一起移动
+        if let c = controller, app.selectedIDs.count > 1, app.selectedIDs.contains(c.noteID) {
+            app.beginGroupDrag()
+            return
+        }
+        // 否则只选中这一张，再单独拖动
+        if let c = controller {
+            app.setSelection([c.noteID])
+        } else {
+            app.clearSelection()
+        }
         window.performDrag(with: event)
+    }
+
+    override func mouseDragged(with event: NSEvent) {
+        AppDelegate.shared.continueGroupDrag()
+    }
+
+    override func mouseUp(with event: NSEvent) {
+        AppDelegate.shared.endGroupDrag()
     }
 }
 
@@ -590,11 +677,35 @@ final class NoteTextView: NSTextView {
     weak var controller: NoteViewController?
 
     override func mouseDown(with event: NSEvent) {
-        if let c = controller, c.moveMode {
-            window?.performDrag(with: event)
+        guard let c = controller, c.moveMode else {
+            AppDelegate.shared.endGroupDrag() // 防御：避免残留状态影响文字选择
+            super.mouseDown(with: event)
             return
         }
-        super.mouseDown(with: event)
+        let app = AppDelegate.shared
+        app.endGroupDrag()
+        if app.selectedIDs.count > 1, app.selectedIDs.contains(c.noteID) {
+            app.beginGroupDrag()
+            return
+        }
+        app.setSelection([c.noteID])
+        window?.performDrag(with: event)
+    }
+
+    override func mouseDragged(with event: NSEvent) {
+        if AppDelegate.shared.isGroupDragging {
+            AppDelegate.shared.continueGroupDrag()
+        } else {
+            super.mouseDragged(with: event)
+        }
+    }
+
+    override func mouseUp(with event: NSEvent) {
+        if AppDelegate.shared.isGroupDragging {
+            AppDelegate.shared.endGroupDrag()
+        } else {
+            super.mouseUp(with: event)
+        }
     }
 }
 

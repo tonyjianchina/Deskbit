@@ -1,7 +1,7 @@
 import AppKit
 import Foundation
 
-// 生成 Desktop Sticky 应用图标：黄色便签 + 图钉 + 四条文字横线
+// 生成 Deskbit 应用图标：黄色便签 + 图钉 + 四条文字横线
 let size: CGFloat = 1024
 let img = NSImage(size: NSSize(width: size, height: size))
 img.lockFocus()
@@ -82,7 +82,7 @@ for (i, c) in colors.enumerated() {
 img.unlockFocus()
 
 // 导出 iconset
-let iconsetDir = URL(fileURLWithPath: "/tmp/DesktopSticky.iconset", isDirectory: true)
+let iconsetDir = URL(fileURLWithPath: "/tmp/Deskbit.iconset", isDirectory: true)
 try? FileManager.default.removeItem(at: iconsetDir)
 try! FileManager.default.createDirectory(at: iconsetDir, withIntermediateDirectories: true)
 

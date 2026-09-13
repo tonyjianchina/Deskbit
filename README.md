@@ -1,4 +1,4 @@
-# Desktop Sticky
+# Deskbit
 
 一款轻量的 macOS 桌面便签应用。它常驻菜单栏，便签数据只保存在本机，无需账号。
 
@@ -21,7 +21,7 @@
 ```bash
 cd DesktopSticky
 ./build.sh
-open "dist/Desktop Sticky.app"
+open "dist/Deskbit.app"
 ```
 
 应用使用本地 ad-hoc 签名。首次打开时，如果 macOS 阻止运行，请在“系统设置 → 隐私与安全性”中允许打开。

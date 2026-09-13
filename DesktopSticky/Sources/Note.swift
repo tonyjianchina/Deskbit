@@ -1,7 +1,7 @@
 import Foundation
 import AppKit
 
-/// 便签数据模型。字段与原始 Desktop Sticky 的 notes.json 完全一致，
+/// 便签数据模型。字段与原始 Deskbit 的 notes.json 完全一致，
 /// 方便直接沿用/迁移已有数据文件。
 struct Note: Codable, Identifiable {
     var id: String

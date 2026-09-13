@@ -10,10 +10,22 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var noteWindows: [String: NoteWindow] = [:]
     private var statusItem: NSStatusItem?
 
+    // MARK: - 框选状态
+
+    /// 当前被框选中的便签 id
+    private(set) var selectedIDs: Set<String> = []
+    /// 正在进行的组拖动（起点 + 各选中窗口的初始 frame）
+    private var groupDrag: (start: NSPoint, frames: [String: NSRect])?
+
+    var isGroupDragging: Bool { groupDrag != nil }
+
     // MARK: - 生命周期
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         setupStatusItem()
+
+        // 桌面框选层（默认开启，可在菜单栏关闭）——需在 setupMenu 之前启用，菜单勾选状态才正确
+        SelectionOverlayController.shared.start()
         setupMenu()
 
         ReminderManager.shared.requestAuthorizationIfNeeded()
@@ -55,7 +67,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             }
         }
 
-        NSLog("Desktop Sticky 启动完成，窗口数: %d", noteWindows.count)
+        NSLog("Deskbit 启动完成，窗口数: %d", noteWindows.count)
     }
 
     /// 渲染所有便签窗口到 /tmp/desktopsticky_snapshot_<i>.png
@@ -96,7 +108,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private func setupStatusItem() {
         let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
         item.button?.image = Self.menuBarIcon()
-        item.button?.toolTip = "Desktop Sticky"
+        item.button?.toolTip = "Deskbit"
         item.button?.imagePosition = .imageOnly
         statusItem = item
     }
@@ -150,13 +162,20 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         menu.addItem(NSMenuItem.separator())
 
-        let aboutItem = NSMenuItem(title: "关于 Desktop Sticky", action: #selector(menuAbout(_:)), keyEquivalent: "")
+        let selectItem = NSMenuItem(title: "启用桌面框选", action: #selector(menuToggleSelection(_:)), keyEquivalent: "")
+        selectItem.target = self
+        selectItem.state = SelectionOverlayController.shared.isActive ? .on : .off
+        menu.addItem(selectItem)
+
+        menu.addItem(NSMenuItem.separator())
+
+        let aboutItem = NSMenuItem(title: "关于 Deskbit", action: #selector(menuAbout(_:)), keyEquivalent: "")
         aboutItem.target = self
         menu.addItem(aboutItem)
 
         menu.addItem(NSMenuItem.separator())
 
-        let quitItem = NSMenuItem(title: "退出 Desktop Sticky", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
+        let quitItem = NSMenuItem(title: "退出 Deskbit", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
         menu.addItem(quitItem)
 
         item.menu = menu
@@ -193,11 +212,81 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             window.orderOut(nil)
         }
         noteWindows.removeAll()
+        endGroupDrag()
+        clearSelection()
+    }
+
+    @objc private func menuToggleSelection(_ sender: NSMenuItem) {
+        if SelectionOverlayController.shared.isActive {
+            SelectionOverlayController.shared.stop()
+            sender.state = .off
+        } else {
+            SelectionOverlayController.shared.start()
+            sender.state = .on
+        }
+    }
+
+    // MARK: - 框选 / 组拖动
+
+    /// 计算与给定屏幕矩形相交的便签
+    func noteIDs(intersecting rect: NSRect) -> Set<String> {
+        var result: Set<String> = []
+        for (id, win) in noteWindows where win.isVisible {
+            if win.frame.intersects(rect) { result.insert(id) }
+        }
+        return result
+    }
+
+    /// 更新选中集合，并同步每张便签的高亮
+    func setSelection(_ ids: Set<String>) {
+        guard ids != selectedIDs else { return }
+        selectedIDs = ids
+        for (id, win) in noteWindows {
+            win.setSelected(ids.contains(id))
+        }
+    }
+
+    func clearSelection() {
+        setSelection([])
+    }
+
+    /// 把某张便签移出选中集合（例如被隐藏/完成后）
+    func removeFromSelection(_ id: String) {
+        guard selectedIDs.contains(id) else { return }
+        var remaining = selectedIDs
+        remaining.remove(id)
+        setSelection(remaining)
+    }
+
+    /// 开始组拖动：记录鼠标起点与所有选中窗口的初始位置
+    func beginGroupDrag() {
+        let start = NSEvent.mouseLocation
+        var frames: [String: NSRect] = [:]
+        for id in selectedIDs {
+            if let win = noteWindows[id] { frames[id] = win.frame }
+        }
+        groupDrag = (start, frames)
+    }
+
+    /// 拖动中：按鼠标位移整体移动所有选中窗口
+    func continueGroupDrag() {
+        guard let group = groupDrag else { return }
+        let current = NSEvent.mouseLocation
+        let dx = current.x - group.start.x
+        let dy = current.y - group.start.y
+        for (id, frame) in group.frames {
+            guard let win = noteWindows[id] else { continue }
+            win.setFrameOrigin(NSPoint(x: frame.origin.x + dx, y: frame.origin.y + dy))
+        }
+    }
+
+    func endGroupDrag() {
+        groupDrag = nil
     }
 
     @objc private func menuAbout(_ sender: Any?) {
         let alert = NSAlert()
-        alert.messageText = "Desktop Sticky"
+        alert.messageText = "Deskbit"
         alert.informativeText = "桌面便签 · 复刻版\n跟随当前桌面，置顶可控，到点提醒。\n数据保存在本机，无需账号。"
         alert.alertStyle = .informational
         alert.addButton(withTitle: "好")
@@ -244,12 +333,18 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
         let win = NoteWindow(note: note)
         noteWindows[note.id] = win
+        win.setSelected(selectedIDs.contains(note.id))
         win.orderFrontRegardless()
         win.makeKey()
     }
 
     func windowDidClose(_ window: NoteWindow) {
         noteWindows.removeValue(forKey: window.noteID)
+        if selectedIDs.contains(window.noteID) {
+            var remaining = selectedIDs
+            remaining.remove(window.noteID)
+            setSelection(remaining)
+        }
     }
 
     /// 通过提醒通知点击定位到某张便签
