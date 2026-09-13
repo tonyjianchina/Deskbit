@@ -11,17 +11,17 @@ mkdir -p "$contents_dir/MacOS" "$contents_dir/Resources"
 
 if [[ "$configuration" == "release" ]]; then
   swift build -c release --arch arm64
-  arm_binary="$(swift build -c release --arch arm64 --show-bin-path)/DesktopSticky"
+  arm_binary="$(swift build -c release --arch arm64 --show-bin-path)/Deskbit"
   swift build -c release --arch x86_64
-  intel_binary="$(swift build -c release --arch x86_64 --show-bin-path)/DesktopSticky"
+  intel_binary="$(swift build -c release --arch x86_64 --show-bin-path)/Deskbit"
   lipo -create "$arm_binary" "$intel_binary" -output "$contents_dir/MacOS/Deskbit"
 else
   swift build -c "$configuration"
-  binary_path="$(swift build -c "$configuration" --show-bin-path)/DesktopSticky"
+  binary_path="$(swift build -c "$configuration" --show-bin-path)/Deskbit"
   cp "$binary_path" "$contents_dir/MacOS/Deskbit"
 fi
 
-icon_work="$project_dir/.build/DesktopSticky.iconset"
+icon_work="$project_dir/.build/Deskbit.iconset"
 mkdir -p "$icon_work"
 swift "$project_dir/Tools/GenerateIcon.swift" "$icon_work/icon_512x512@2x.png"
 for spec in "16 16x16" "32 16x16@2x" "32 32x32" "64 32x32@2x" "128 128x128" "256 128x128@2x" "256 256x256" "512 256x256@2x" "512 512x512"; do

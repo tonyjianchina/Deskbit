@@ -1,5 +1,33 @@
 import Foundation
 
+enum NoteStorage {
+    static func resolveFileURL(in base: URL, manager: FileManager = .default) -> URL {
+        let currentDirectory = base.appendingPathComponent("Deskbit", isDirectory: true)
+        let currentFile = currentDirectory.appendingPathComponent("notes.json")
+        if manager.fileExists(atPath: currentFile.path) {
+            return currentFile
+        }
+
+        let legacyDirectoryName = ["Desktop", "Sticky"].joined()
+        let legacyFile = base
+            .appendingPathComponent(legacyDirectoryName, isDirectory: true)
+            .appendingPathComponent("notes.json")
+
+        if manager.fileExists(atPath: legacyFile.path) {
+            do {
+                try manager.createDirectory(at: currentDirectory, withIntermediateDirectories: true)
+                try manager.copyItem(at: legacyFile, to: currentFile)
+                return currentFile
+            } catch {
+                return legacyFile
+            }
+        }
+
+        try? manager.createDirectory(at: currentDirectory, withIntermediateDirectories: true)
+        return currentFile
+    }
+}
+
 @MainActor
 final class NoteStore {
     static let shared = NoteStore()
@@ -20,9 +48,7 @@ final class NoteStore {
     private var fileURL: URL {
         let manager = FileManager.default
         let base = manager.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
-        let directory = base.appendingPathComponent("DesktopSticky", isDirectory: true)
-        try? manager.createDirectory(at: directory, withIntermediateDirectories: true)
-        return directory.appendingPathComponent("notes.json")
+        return NoteStorage.resolveFileURL(in: base, manager: manager)
     }
 
     private init() {

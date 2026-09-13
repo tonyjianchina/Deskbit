@@ -2,15 +2,15 @@
 import PackageDescription
 
 let package = Package(
-    name: "DesktopSticky",
+    name: "Deskbit",
     platforms: [.macOS(.v11)],
     products: [
-        .executable(name: "DesktopSticky", targets: ["DesktopSticky"])
+        .executable(name: "Deskbit", targets: ["Deskbit"])
     ],
     targets: [
         .executableTarget(
-            name: "DesktopSticky",
-            path: "Sources/DesktopSticky"
+            name: "Deskbit",
+            path: "Sources/Deskbit"
         )
     ]
 )

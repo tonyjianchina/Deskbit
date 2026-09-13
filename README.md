@@ -25,4 +25,4 @@ Release 构建产物位于 `dist/Deskbit.app`，同时支持 Apple Silicon 与 I
 - 菜单栏便签图标还可新建、显示全部、恢复旧版隐藏便签或退出。
 - 有框选便签时，自动排序只整理选中的几张；没有框选时整理全部。排序会在主屏幕左上角向下对齐，每列最多 4 张，第 5 张起自动向右换列，并将参与排序的便签取消置顶、置于其他应用窗口后方。
 - 框选多张便签后，点击其中任意一张的置顶按钮，会让整组同时置顶或同时取消置顶。
-- 内容、所选颜色、位置和置顶状态保存在 `~/Library/Application Support/DesktopSticky/notes.json`。
+- 内容、所选颜色、位置和置顶状态保存在 `~/Library/Application Support/Deskbit/notes.json`。

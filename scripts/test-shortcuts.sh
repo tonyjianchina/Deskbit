@@ -2,14 +2,14 @@
 set -euo pipefail
 
 project_dir="${0:A:h:h}"
-probe_binary="$(mktemp /tmp/desktop-sticky-shortcuts.XXXXXX)"
+probe_binary="$(mktemp /tmp/deskbit-shortcuts.XXXXXX)"
 trap 'rm -f "$probe_binary"' EXIT
 
 swiftc \
-  "$project_dir/Sources/DesktopSticky/NoteAppearance.swift" \
-  "$project_dir/Sources/DesktopSticky/Models.swift" \
-  "$project_dir/Sources/DesktopSticky/RichTextCodec.swift" \
-  "$project_dir/Sources/DesktopSticky/StickyViews.swift" \
+  "$project_dir/Sources/Deskbit/NoteAppearance.swift" \
+  "$project_dir/Sources/Deskbit/Models.swift" \
+  "$project_dir/Sources/Deskbit/RichTextCodec.swift" \
+  "$project_dir/Sources/Deskbit/StickyViews.swift" \
   "$project_dir/Tests/ShortcutProbe.swift" \
   -o "$probe_binary"
 
