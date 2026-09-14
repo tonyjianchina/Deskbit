@@ -56,6 +56,7 @@ struct StickyNote: Codable, Identifiable {
     var isPinned: Bool
     var isHidden: Bool
     var reminderDate: Date?
+    var completedAt: Date?
     var createdAt: Date
     var updatedAt: Date
 
@@ -76,6 +77,7 @@ struct StickyNote: Codable, Identifiable {
             isPinned: false,
             isHidden: false,
             reminderDate: nil,
+            completedAt: nil,
             createdAt: Date(),
             updatedAt: Date()
         )

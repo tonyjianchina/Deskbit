@@ -99,6 +99,7 @@ final class StickyWindowController: NSWindowController, NSWindowDelegate, NSText
     }
 
     func didTapArrange() { appController?.arrangeNotes() }
+    func didTapHistory(from sourceView: NSView) { appController?.showHistory(relativeTo: sourceView) }
 
     func didBeginToolbarDrag(with event: NSEvent) {
         appController?.beginDragging(noteID: note.id, event: event)

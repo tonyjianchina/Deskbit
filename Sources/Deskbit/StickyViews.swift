@@ -4,6 +4,7 @@ import AppKit
 protocol StickyToolbarDelegate: AnyObject {
     func didChooseColor(_ color: NoteColor)
     func didTapArrange()
+    func didTapHistory(from sourceView: NSView)
     func didBeginToolbarDrag(with event: NSEvent)
     func didTapBold()
     func didTapBulletList()
@@ -84,6 +85,7 @@ final class StickyToolbarView: NSView {
         addSubview(stack)
 
         stack.addArrangedSubview(iconButton("rectangle.3.group", tip: "自动排序便签", action: #selector(arrangeNotes)))
+        stack.addArrangedSubview(iconButton("clock.arrow.circlepath", tip: "历史便签", action: #selector(showHistory(_:))))
 
         let spacer = NSView()
         spacer.setContentHuggingPriority(.defaultLow, for: .horizontal)
@@ -150,6 +152,7 @@ final class StickyToolbarView: NSView {
 
     @objc private func selectColor(_ sender: ColorDotButton) { delegate?.didChooseColor(sender.noteColor) }
     @objc private func arrangeNotes() { delegate?.didTapArrange() }
+    @objc private func showHistory(_ sender: NSButton) { delegate?.didTapHistory(from: sender) }
     @objc private func newNote() { delegate?.didTapNew() }
     @objc private func togglePin() { delegate?.didTapPin() }
     @objc private func completeNoteButton() { delegate?.didTapComplete() }
