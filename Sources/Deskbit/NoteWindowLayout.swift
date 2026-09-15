@@ -19,15 +19,23 @@ enum NoteWindowLayout {
             1,
             (availableWidth - gap * CGFloat(columns - 1)) / CGFloat(columns)
         )
-        let cellHeight = max(1, (availableHeight - gap * CGFloat(rows - 1)) / CGFloat(rows))
-
-        let columnWidths = (0..<columns).map { column in
+        let columnRanges = (0..<columns).map { column in
             let start = column * rows
             let end = min(start + rows, count)
+            return start..<end
+        }
+        let columnWidths = columnRanges.map { range in
             return min(
                 maximumColumnWidth,
-                sizes[start..<end].map(\.width).max() ?? maximumColumnWidth
+                sizes[range].map(\.width).max() ?? maximumColumnWidth
             )
+        }
+        let columnHeightScales = columnRanges.map { range in
+            let requestedHeight = sizes[range].reduce(CGFloat.zero) { total, size in
+                total + max(1, size.height)
+            }
+            let availableNoteHeight = max(1, availableHeight - gap * CGFloat(range.count - 1))
+            return min(1, availableNoteHeight / requestedHeight)
         }
         var columnOrigins: [CGFloat] = []
         var nextX = visibleFrame.minX + margin
@@ -36,16 +44,17 @@ enum NoteWindowLayout {
             nextX += width + gap
         }
 
+        var columnTops = Array(repeating: visibleFrame.maxY - margin, count: columns)
         return sizes.enumerated().map { index, requestedSize in
             let column = index / rows
-            let row = index % rows
             let size = NSSize(
                 width: min(requestedSize.width, columnWidths[column]),
-                height: min(requestedSize.height, cellHeight)
+                height: max(1, requestedSize.height) * columnHeightScales[column]
             )
             let x = columnOrigins[column]
-            let cellTop = visibleFrame.maxY - margin - CGFloat(row) * (cellHeight + gap)
-            return NSRect(x: x, y: cellTop - size.height, width: size.width, height: size.height)
+            let y = columnTops[column] - size.height
+            columnTops[column] = y - gap
+            return NSRect(x: x, y: y, width: size.width, height: size.height)
         }
     }
 }
