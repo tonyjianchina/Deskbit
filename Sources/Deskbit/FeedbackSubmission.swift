@@ -44,6 +44,8 @@ enum FeedbackSubmission {
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.setValue("application/json", forHTTPHeaderField: "Accept")
+        request.setValue("https://github.com/tonyjianchina/Deskbit", forHTTPHeaderField: "Referer")
+        request.setValue("https://github.com", forHTTPHeaderField: "Origin")
         request.httpBody = try JSONSerialization.data(withJSONObject: payload)
         return request
     }
@@ -65,6 +67,8 @@ enum FeedbackSubmission {
         let message = payload["message"] as? String ?? ""
         let normalizedMessage = message.lowercased()
         if normalizedMessage.contains("activate your form")
+            || normalizedMessage.contains("activate form")
+            || normalizedMessage.contains("needs activation")
             || normalizedMessage.contains("activation link")
             || normalizedMessage.contains("confirm your email") {
             return .success(.activationRequired)

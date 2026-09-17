@@ -143,13 +143,15 @@ final class FeedbackViewController: NSViewController, NSTextViewDelegate {
     private func finishSubmission(_ result: Result<FeedbackSubmission.Receipt, FeedbackSubmission.Error>) {
         sendButton.title = "发送"
         switch result {
-        case let .success(receipt):
+        case .success(.submitted):
             editor.string = ""
             sendButton.isEnabled = false
-            statusLabel.stringValue = receipt == .activationRequired
-                ? "已提交；首次使用请在收件邮箱完成 FormSubmit 激活。"
-                : "发送成功，谢谢你的反馈。"
+            statusLabel.stringValue = "发送成功，谢谢你的反馈。"
             statusLabel.textColor = .systemGreen
+        case .success(.activationRequired):
+            sendButton.isEnabled = true
+            statusLabel.stringValue = "尚未发送；请在收件邮箱完成 FormSubmit 激活后重试。"
+            statusLabel.textColor = .systemOrange
         case let .failure(error):
             sendButton.isEnabled = true
             statusLabel.stringValue = error.localizedDescription

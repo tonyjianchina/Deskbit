@@ -9,6 +9,8 @@ struct FeedbackSubmissionProbe {
               request.httpMethod == "POST",
               request.value(forHTTPHeaderField: "Content-Type") == "application/json",
               request.value(forHTTPHeaderField: "Accept") == "application/json",
+              request.value(forHTTPHeaderField: "Referer") == "https://github.com/tonyjianchina/Deskbit",
+              request.value(forHTTPHeaderField: "Origin") == "https://github.com",
               let body = request.httpBody,
               let payload = try JSONSerialization.jsonObject(with: body) as? [String: String],
               payload["message"] == "希望增加搜索功能",
@@ -48,6 +50,14 @@ struct FeedbackSubmissionProbe {
             break
         default:
             exit(5)
+        }
+
+        let liveActivationBody = Data(#"{"success":"false","message":"This form needs Activation. We've sent you an email containing an 'Activate Form' link. Just click it and your form will be actived!"}"#.utf8)
+        switch FeedbackSubmission.result(data: liveActivationBody, response: rejectedResponse, transportError: nil) {
+        case .success(.activationRequired):
+            break
+        default:
+            exit(6)
         }
 
         print("feedback request: pass")

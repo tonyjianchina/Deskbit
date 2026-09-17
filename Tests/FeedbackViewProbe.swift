@@ -48,7 +48,9 @@ struct FeedbackViewProbe {
         activationController.textDidChange(Notification(name: NSText.didChangeNotification, object: activationEditor))
         activationButton.performClick(nil)
         let activationLabels = descendants(of: activationController.view).compactMap { ($0 as? NSTextField)?.stringValue }
-        guard activationLabels.contains(where: { $0.contains("FormSubmit 激活") }) else { exit(6) }
+        guard activationLabels.contains(where: { $0.contains("尚未发送") && $0.contains("激活后重试") }),
+              activationEditor.string == "首次反馈",
+              activationButton.isEnabled else { exit(6) }
 
         print("feedback view: pass")
     }
