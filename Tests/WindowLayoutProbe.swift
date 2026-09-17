@@ -31,6 +31,26 @@ struct WindowLayoutProbe {
         )[0]
         guard oversized == NSRect(x: 16, y: 16, width: 1168, height: 768) else { exit(7) }
 
+        let shortColumn = NoteWindowLayout.alignedFrames(
+            sizes: Array(repeating: NSSize(width: 300, height: 200), count: 3),
+            in: screen
+        )
+        guard shortColumn[0].maxY == 784,
+              shortColumn[1].maxY == shortColumn[0].minY - 12,
+              shortColumn[2].maxY == shortColumn[1].minY - 12,
+              shortColumn[2].height == 200 else { exit(11) }
+
+        let mixedHeights = NoteWindowLayout.alignedFrames(
+            sizes: [
+                NSSize(width: 300, height: 700),
+                NSSize(width: 300, height: 20)
+            ],
+            in: screen
+        )
+        guard mixedHeights[0].height == 700,
+              mixedHeights[1].height == 20,
+              mixedHeights[1].maxY == mixedHeights[0].minY - 12 else { exit(12) }
+
         let manyFrames = NoteWindowLayout.alignedFrames(
             sizes: Array(repeating: NSSize(width: 300, height: 200), count: 12),
             in: screen

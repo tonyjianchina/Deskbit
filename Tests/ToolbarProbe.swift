@@ -31,6 +31,7 @@ struct ToolbarProbe {
             .first(where: { $0.accessibilityLabel() == "自动排序便签" }) else { exit(5) }
         arrange.performClick(nil)
         guard delegate.arrangeCount == 1 else { exit(6) }
+        guard !labels.contains("历史便签") else { exit(12) }
 
         toolbar.frame = NSRect(x: 0, y: 0, width: 300, height: 40)
         toolbar.layoutSubtreeIfNeeded()

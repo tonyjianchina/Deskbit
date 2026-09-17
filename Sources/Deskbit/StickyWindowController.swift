@@ -125,7 +125,23 @@ final class StickyWindowController: NSWindowController, NSWindowDelegate, NSText
         window?.makeFirstResponder(textView)
     }
 
-    func didTapNew() { appController?.createNote() }
+    func didTapNew() {
+        guard let window else {
+            appController?.createNote()
+            return
+        }
+        let sourceFrame = window.frame
+        let targetScreen = window.screen ?? NSScreen.screens.max { first, second in
+            let firstIntersection = first.visibleFrame.intersection(sourceFrame)
+            let secondIntersection = second.visibleFrame.intersection(sourceFrame)
+            return firstIntersection.width * firstIntersection.height < secondIntersection.width * secondIntersection.height
+        }
+        guard let visibleFrame = targetScreen?.visibleFrame else {
+            appController?.createNote()
+            return
+        }
+        appController?.createNote(near: sourceFrame, in: visibleFrame)
+    }
 
     func didTapPin() {
         if let appController {

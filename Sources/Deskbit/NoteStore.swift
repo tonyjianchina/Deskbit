@@ -57,11 +57,14 @@ final class NoteStore {
         notes = decoded
     }
 
+    var activeNotes: [StickyNote] { NoteHistory.activeNotes(in: notes) }
+    var completedNotes: [StickyNote] { NoteHistory.completedNotes(in: notes) }
+
     func note(id: UUID) -> StickyNote? { notes.first { $0.id == id } }
 
     @discardableResult
-    func add() -> StickyNote {
-        let note = StickyNote.fresh(index: notes.count)
+    func add(frame: NSRect? = nil) -> StickyNote {
+        let note = StickyNote.fresh(index: notes.count, frame: frame)
         notes.append(note)
         save()
         return note
@@ -86,8 +89,28 @@ final class NoteStore {
         save()
     }
 
-    func remove(id: UUID) {
-        notes.removeAll { $0.id == id }
+    @discardableResult
+    func complete(id: UUID) -> Bool {
+        guard NoteHistory.complete(id: id, in: &notes) else { return false }
+        save()
+        return true
+    }
+
+    func restore(id: UUID) -> StickyNote? {
+        guard NoteHistory.restore(id: id, in: &notes) else { return nil }
+        save()
+        return note(id: id)
+    }
+
+    @discardableResult
+    func permanentlyDelete(id: UUID) -> Bool {
+        guard NoteHistory.permanentlyDelete(id: id, in: &notes) else { return false }
+        save()
+        return true
+    }
+
+    func clearCompleted() {
+        NoteHistory.clearCompleted(in: &notes)
         save()
     }
 

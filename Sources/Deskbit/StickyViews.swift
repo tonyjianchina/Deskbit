@@ -226,6 +226,21 @@ final class StickyFormattingFooterView: NSView {
     @objc private func toggleStrikethrough() { delegate?.didTapStrikethrough() }
 }
 
+enum StickyEditingShortcut: Equatable {
+    case copy, cut, paste, selectAll
+
+    static func command(for modifiers: NSEvent.ModifierFlags, key: String?) -> StickyEditingShortcut? {
+        guard modifiers == [.command] else { return nil }
+        switch key {
+        case "c": return .copy
+        case "x": return .cut
+        case "v": return .paste
+        case "a": return .selectAll
+        default: return nil
+        }
+    }
+}
+
 final class StickyTextView: NSTextView {
     var onToggleBold: (() -> Void)?
     var onToggleBulletList: (() -> Void)?
@@ -249,6 +264,15 @@ final class StickyTextView: NSTextView {
         }
         if modifiers == [.command, .shift], key == "x" {
             onToggleStrikethrough?()
+            return true
+        }
+        if let command = StickyEditingShortcut.command(for: modifiers, key: key) {
+            switch command {
+            case .copy: copy(nil)
+            case .cut: cut(nil)
+            case .paste: paste(nil)
+            case .selectAll: selectAll(nil)
+            }
             return true
         }
         return super.performKeyEquivalent(with: event)
