@@ -40,9 +40,14 @@ final class AppController: NSObject, NSApplicationDelegate, UNUserNotificationCe
         controllers.values.forEach { $0.orderBackIfUnpinned() }
     }
 
-    func createNote() {
+    func createNote(near sourceFrame: NSRect? = nil, in visibleFrame: NSRect? = nil) {
         setSelection([])
-        open(NoteStore.shared.add(), focus: true)
+        let frame = sourceFrame.flatMap { source in
+            visibleFrame.map {
+                NoteCreationLayout.frame(near: source, size: NoteAppearance.defaultSize, in: $0)
+            }
+        }
+        open(NoteStore.shared.add(frame: frame), focus: true)
         refreshMenu()
     }
 

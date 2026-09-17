@@ -63,8 +63,8 @@ final class NoteStore {
     func note(id: UUID) -> StickyNote? { notes.first { $0.id == id } }
 
     @discardableResult
-    func add() -> StickyNote {
-        let note = StickyNote.fresh(index: notes.count)
+    func add(frame: NSRect? = nil) -> StickyNote {
+        let note = StickyNote.fresh(index: notes.count, frame: frame)
         notes.append(note)
         save()
         return note

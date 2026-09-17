@@ -60,20 +60,26 @@ struct StickyNote: Codable, Identifiable {
     var createdAt: Date
     var updatedAt: Date
 
-    static func fresh(index: Int = 0) -> StickyNote {
-        let screen = NSScreen.main?.visibleFrame ?? NSRect(x: 0, y: 0, width: 1440, height: 900)
+    static func fresh(index: Int = 0, frame: NSRect? = nil) -> StickyNote {
         let size = NoteAppearance.defaultSize
-        let offset = CGFloat((index % 6) * 26)
-        let origin = NSPoint(
-            x: screen.midX - size.width / 2 + offset,
-            y: screen.midY - size.height / 2 - offset
-        )
+        let initialFrame: NSRect
+        if let frame {
+            initialFrame = frame
+        } else {
+            let screen = NSScreen.main?.visibleFrame ?? NSRect(x: 0, y: 0, width: 1440, height: 900)
+            let offset = CGFloat((index % 6) * 26)
+            let origin = NSPoint(
+                x: screen.midX - size.width / 2 + offset,
+                y: screen.midY - size.height / 2 - offset
+            )
+            initialFrame = NSRect(origin: origin, size: size)
+        }
         return StickyNote(
             id: UUID(),
             text: "",
             richTextData: nil,
             color: NoteColor.allCases[index % NoteColor.allCases.count],
-            frame: WindowFrame(NSRect(origin: origin, size: size)),
+            frame: WindowFrame(initialFrame),
             isPinned: false,
             isHidden: false,
             reminderDate: nil,
