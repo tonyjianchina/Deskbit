@@ -2,7 +2,7 @@ import AppKit
 import UserNotifications
 
 @MainActor
-final class AppController: NSObject, NSApplicationDelegate, UNUserNotificationCenterDelegate, NSPopoverDelegate {
+final class AppController: NSObject, NSApplicationDelegate, UNUserNotificationCenterDelegate, NSPopoverDelegate, DeskbitStatusMenuTarget {
     private var controllers: [UUID: StickyWindowController] = [:]
     private var statusItem: NSStatusItem!
     private let hiddenMenu = NSMenuItem(title: "显示隐藏的便签", action: nil, keyEquivalent: "")
@@ -10,6 +10,7 @@ final class AppController: NSObject, NSApplicationDelegate, UNUserNotificationCe
     private var selectionOverlay: SelectionOverlayWindowController?
     private var historyPopover: NSPopover?
     private var historyDismissalMonitor: HistoryPopoverDismissalMonitor?
+    private var feedbackWindowController: NSWindowController?
     private var desktopMouseMonitor: Any?
     private var localMouseMonitor: Any?
     private var desktopSelectionStart: NSPoint?
@@ -102,37 +103,14 @@ final class AppController: NSObject, NSApplicationDelegate, UNUserNotificationCe
         statusItem.button?.imagePosition = .imageLeading
         statusItem.button?.title = "便签"
         statusItem.button?.toolTip = "Deskbit"
-        let menu = NSMenu()
-        let newItem = NSMenuItem(title: "新建便签", action: #selector(newNoteFromMenu), keyEquivalent: "n")
-        newItem.target = self
-        menu.addItem(newItem)
-        let arrangeItem = NSMenuItem(title: "自动排序便签", action: #selector(arrangeNotes), keyEquivalent: "")
-        arrangeItem.target = self
-        arrangeItem.image = NSImage(systemSymbolName: "rectangle.3.group", accessibilityDescription: "自动排序便签")
-        menu.addItem(arrangeItem)
-        let historyItem = NSMenuItem(title: "历史便签", action: #selector(showHistoryFromMenu), keyEquivalent: "")
-        historyItem.target = self
-        historyItem.image = NSImage(systemSymbolName: "clock.arrow.circlepath", accessibilityDescription: "历史便签")
-        menu.addItem(historyItem)
-        let showItem = NSMenuItem(title: "显示所有便签", action: #selector(showAllNotes), keyEquivalent: "0")
-        showItem.target = self
-        menu.addItem(showItem)
-        hiddenMenu.target = self
-        menu.addItem(hiddenMenu)
-        menu.addItem(.separator())
-        ApplicationMenu.addEditSubmenu(to: menu)
-        menu.addItem(.separator())
-        let quitItem = NSMenuItem(title: "退出 Deskbit", action: #selector(quit), keyEquivalent: "q")
-        quitItem.target = self
-        menu.addItem(quitItem)
-        statusItem.menu = menu
+        statusItem.menu = DeskbitStatusMenu.make(target: self, hiddenMenu: hiddenMenu)
     }
 
     private func configureMainMenu() {
         NSApp.mainMenu = ApplicationMenu.make()
     }
 
-    @objc private func newNoteFromMenu() { createNote() }
+    @objc func newNoteFromMenu() { createNote() }
 
     @objc func arrangeNotes() {
         let visibleNotes = NoteStore.shared.activeNotes.filter { !$0.isHidden }
@@ -207,12 +185,45 @@ final class AppController: NSObject, NSApplicationDelegate, UNUserNotificationCe
         historyPopover = nil
     }
 
-    @objc private func showHistoryFromMenu() {
+    @objc func showHistoryFromMenu() {
         guard let sourceView = statusItem.button else { return }
         DispatchQueue.main.async { [weak self, weak sourceView] in
             guard let sourceView else { return }
             self?.showHistory(relativeTo: sourceView)
         }
+    }
+
+    @objc func showFeedbackFromMenu() {
+        let windowController: NSWindowController
+        let feedbackViewController: FeedbackViewController
+        if let existing = feedbackWindowController,
+           let existingViewController = existing.contentViewController as? FeedbackViewController {
+            windowController = existing
+            feedbackViewController = existingViewController
+        } else {
+            feedbackViewController = FeedbackViewController { message, completion in
+                FeedbackSubmission.submit(message: message, completion: completion)
+            }
+            let panel = NSPanel(
+                contentRect: NSRect(x: 0, y: 0, width: 420, height: 330),
+                styleMask: [.titled, .closable],
+                backing: .buffered,
+                defer: false
+            )
+            panel.title = "用户反馈"
+            panel.isReleasedWhenClosed = false
+            panel.isFloatingPanel = false
+            panel.level = .normal
+            panel.contentViewController = feedbackViewController
+            panel.center()
+            windowController = NSWindowController(window: panel)
+            feedbackWindowController = windowController
+        }
+
+        NSApp.activate(ignoringOtherApps: true)
+        windowController.showWindow(nil)
+        windowController.window?.makeKeyAndOrderFront(nil)
+        DispatchQueue.main.async { feedbackViewController.focusEditor() }
     }
 
     private func confirmDeleteHistoryNote(id: UUID) {
@@ -416,7 +427,7 @@ final class AppController: NSObject, NSApplicationDelegate, UNUserNotificationCe
         selectionOverlay = nil
     }
 
-    @objc private func showAllNotes() {
+    @objc func showAllNotes() {
         for note in NoteStore.shared.activeNotes {
             show(noteID: note.id)
         }
@@ -427,7 +438,7 @@ final class AppController: NSObject, NSApplicationDelegate, UNUserNotificationCe
         show(noteID: id)
     }
 
-    @objc private func quit() { NSApp.terminate(nil) }
+    @objc func quit() { NSApp.terminate(nil) }
 
     nonisolated func userNotificationCenter(
         _ center: UNUserNotificationCenter,
