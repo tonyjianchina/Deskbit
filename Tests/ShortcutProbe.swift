@@ -34,8 +34,20 @@ struct ShortcutProbe {
         editor.insertTab(nil)
         editor.insertBacktab(nil)
 
-        print("boldShortcut=\(boldCount == 1) bulletShortcut=\(bulletCount == 1) strikeShortcut=\(strikeCount == 1) markdownAsterisk=\(markdownAsteriskPassedThrough) nestingShortcuts=\(indentationDeltas == [1, -1])")
-        guard boldCount == 1, bulletCount == 1, strikeCount == 1, markdownAsteriskPassedThrough, indentationDeltas == [1, -1] else { exit(1) }
+        let editingShortcuts = [
+            StickyEditingShortcut.command(for: [.command], key: "c"),
+            StickyEditingShortcut.command(for: [.command], key: "x"),
+            StickyEditingShortcut.command(for: [.command], key: "v"),
+            StickyEditingShortcut.command(for: [.command], key: "a")
+        ]
+
+        print("boldShortcut=\(boldCount == 1) bulletShortcut=\(bulletCount == 1) strikeShortcut=\(strikeCount == 1) markdownAsterisk=\(markdownAsteriskPassedThrough) nestingShortcuts=\(indentationDeltas == [1, -1]) editingShortcuts=\(editingShortcuts == [.copy, .cut, .paste, .selectAll])")
+        guard boldCount == 1,
+              bulletCount == 1,
+              strikeCount == 1,
+              markdownAsteriskPassedThrough,
+              indentationDeltas == [1, -1],
+              editingShortcuts == [.copy, .cut, .paste, .selectAll] else { exit(1) }
     }
 
     private static func keyEvent(modifiers: NSEvent.ModifierFlags, characters: String, ignoringModifiers: String) -> NSEvent {

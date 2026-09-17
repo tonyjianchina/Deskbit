@@ -120,6 +120,8 @@ final class AppController: NSObject, NSApplicationDelegate, UNUserNotificationCe
         hiddenMenu.target = self
         menu.addItem(hiddenMenu)
         menu.addItem(.separator())
+        ApplicationMenu.addEditSubmenu(to: menu)
+        menu.addItem(.separator())
         let quitItem = NSMenuItem(title: "退出 Deskbit", action: #selector(quit), keyEquivalent: "q")
         quitItem.target = self
         menu.addItem(quitItem)
@@ -127,15 +129,7 @@ final class AppController: NSObject, NSApplicationDelegate, UNUserNotificationCe
     }
 
     private func configureMainMenu() {
-        let mainMenu = NSMenu()
-        let appItem = NSMenuItem()
-        let appMenu = NSMenu()
-        appMenu.addItem(withTitle: "关于 Deskbit", action: #selector(NSApplication.orderFrontStandardAboutPanel(_:)), keyEquivalent: "")
-        appMenu.addItem(.separator())
-        appMenu.addItem(withTitle: "退出 Deskbit", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
-        appItem.submenu = appMenu
-        mainMenu.addItem(appItem)
-        NSApp.mainMenu = mainMenu
+        NSApp.mainMenu = ApplicationMenu.make()
     }
 
     @objc private func newNoteFromMenu() { createNote() }
