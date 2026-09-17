@@ -38,10 +38,6 @@ final class AppController: NSObject, NSApplicationDelegate, UNUserNotificationCe
         refreshMenu()
     }
 
-    func applicationDidResignActive(_ notification: Notification) {
-        controllers.values.forEach { $0.orderBackIfUnpinned() }
-    }
-
     func createNote(near sourceFrame: NSRect? = nil, in visibleFrame: NSRect? = nil) {
         setSelection([])
         let frame = sourceFrame.flatMap { source in

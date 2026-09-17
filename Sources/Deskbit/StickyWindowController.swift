@@ -73,8 +73,8 @@ final class StickyWindowController: NSWindowController, NSWindowDelegate, NSText
     func windowDidResize(_ notification: Notification) { saveFrame() }
 
     func windowDidResignKey(_ notification: Notification) {
-        guard !note.isPinned else { return }
-        window?.orderBack(nil)
+        // Unpinned notes use the normal macOS window ordering. Losing keyboard
+        // focus must not force the note behind every other window.
     }
 
     func textDidChange(_ notification: Notification) {
@@ -233,11 +233,6 @@ final class StickyWindowController: NSWindowController, NSWindowDelegate, NSText
 
     func updateSelection(_ isSelected: Bool) {
         rootView.updateSelection(isSelected)
-    }
-
-    func orderBackIfUnpinned() {
-        guard !note.isPinned else { return }
-        window?.orderBack(nil)
     }
 
     func captureCurrentFrame() -> WindowFrame? {

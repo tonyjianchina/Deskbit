@@ -6,8 +6,7 @@ probe_binary="$(mktemp /tmp/deskbit-focus.XXXXXX)"
 trap 'rm -f "$probe_binary"' EXIT
 
 swiftc \
-  "$project_dir/Sources/Deskbit/NoteAppearance.swift" \
-  "$project_dir/Sources/Deskbit/StickyWindow.swift" \
+  ${(f)"$(find "$project_dir/Sources/Deskbit" -maxdepth 1 -name '*.swift' ! -name 'main.swift' -print | sort)"} \
   "$project_dir/Tests/FocusProbe.swift" \
   -o "$probe_binary"
 

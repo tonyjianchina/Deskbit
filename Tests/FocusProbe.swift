@@ -70,13 +70,31 @@ struct FocusProbe {
             && resident.frame == movedProxyFrame
             && !proxy.isVisible
 
-        print("canBecomeKey=\(window.canBecomeKey) canBecomeMain=\(window.canBecomeMain) unpinned=\(unpinnedBehavior) pinned=\(pinnedBehavior) unpinMovesBack=\(unpinMovesBack) dedicatedProxy=\(usesDedicatedPinnedProxy) restoresResident=\(restoresOriginalDesktopWindow)")
+        let noteController = StickyWindowController(note: .fresh())
+        let backgroundPeer = StickyWindow(
+            contentRect: NSRect(x: 100, y: 100, width: 160, height: 100),
+            styleMask: [.borderless],
+            backing: .buffered,
+            defer: false
+        )
+        backgroundPeer.orderFrontRegardless()
+        noteController.window?.orderFrontRegardless()
+        noteController.windowDidResignKey(Notification(name: NSWindow.didResignKeyNotification))
+        let orderAfterResigningKey = NSApp.orderedWindows
+        let keepsStandardOrderAfterResigningKey = noteController.window.flatMap { noteWindow in
+            guard let noteIndex = orderAfterResigningKey.firstIndex(of: noteWindow),
+                  let peerIndex = orderAfterResigningKey.firstIndex(of: backgroundPeer) else { return false }
+            return noteIndex < peerIndex
+        } ?? false
+
+        print("canBecomeKey=\(window.canBecomeKey) canBecomeMain=\(window.canBecomeMain) unpinned=\(unpinnedBehavior) pinned=\(pinnedBehavior) unpinMovesBack=\(unpinMovesBack) dedicatedProxy=\(usesDedicatedPinnedProxy) restoresResident=\(restoresOriginalDesktopWindow) keepsOrderAfterBlur=\(keepsStandardOrderAfterResigningKey)")
         guard window.canBecomeKey,
               window.canBecomeMain,
               unpinnedBehavior,
               pinnedBehavior,
               unpinMovesBack,
               usesDedicatedPinnedProxy,
-              restoresOriginalDesktopWindow else { exit(1) }
+              restoresOriginalDesktopWindow,
+              keepsStandardOrderAfterResigningKey else { exit(1) }
     }
 }
