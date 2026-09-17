@@ -10,14 +10,14 @@ Deskbit 用来随手记录任务、灵感和备忘。每张便签都是独立窗
 
 ## 下载与安装
 
-从 [Releases](https://github.com/tonyjianchina/Deskbit/releases/latest) 下载最新的 `Deskbit-v1.0.0-macOS.zip`。
+从 [Releases](https://github.com/tonyjianchina/Deskbit/releases/latest) 下载最新的 `Deskbit-v1.1.0-macOS-universal.zip`。
 
 1. 双击 ZIP 解压。
 2. 将 `Deskbit.app` 拖入“应用程序”文件夹。
 3. 在“应用程序”中打开 Deskbit。
 
 > [!IMPORTANT]
-> v1.0.0 是早期试用版，已进行本地代码签名，但尚未经过 Apple Developer ID 签名和公证。首次打开可能被 macOS 拦截。请先尝试打开一次，再按系统版本放行：
+> v1.1.0 已进行本地代码签名，但尚未经过 Apple Developer ID 签名和公证。首次打开可能被 macOS 拦截。请先尝试打开一次，再按系统版本放行：
 > - macOS 13 或更高版本：“系统设置 → 隐私与安全性”，在安全性区域点击“仍要打开”。
 > - macOS 11–12：“系统偏好设置 → 安全性与隐私 → 通用”，点击“仍要打开”。
 >
