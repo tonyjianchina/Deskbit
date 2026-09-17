@@ -12,7 +12,7 @@ struct ToolbarProbe {
 
         guard let stack = toolbar.subviews.compactMap({ $0 as? NSStackView }).first else { exit(1) }
         let labels = stack.arrangedSubviews.compactMap { ($0 as? NSButton)?.accessibilityLabel() }
-        let expected = ["自动排序便签", "历史便签", "黄色", "蓝色", "绿色", "粉色", "新建便签", "置顶", "完成"]
+        let expected = ["自动排序便签", "黄色", "蓝色", "绿色", "粉色", "新建便签", "置顶", "完成"]
         guard labels == expected else { exit(2) }
 
         let colorButtons = stack.arrangedSubviews.compactMap { $0 as? ColorDotButton }
@@ -31,11 +31,7 @@ struct ToolbarProbe {
             .first(where: { $0.accessibilityLabel() == "自动排序便签" }) else { exit(5) }
         arrange.performClick(nil)
         guard delegate.arrangeCount == 1 else { exit(6) }
-        guard let history = stack.arrangedSubviews
-            .compactMap({ $0 as? NSButton })
-            .first(where: { $0.accessibilityLabel() == "历史便签" }) else { exit(12) }
-        history.performClick(nil)
-        guard delegate.historyCount == 1 else { exit(13) }
+        guard !labels.contains("历史便签") else { exit(12) }
 
         toolbar.frame = NSRect(x: 0, y: 0, width: 300, height: 40)
         toolbar.layoutSubtreeIfNeeded()
@@ -53,11 +49,9 @@ struct ToolbarProbe {
 @MainActor
 private final class ToolbarDelegateProbe: StickyToolbarDelegate {
     var arrangeCount = 0
-    var historyCount = 0
 
     func didChooseColor(_ color: NoteColor) {}
     func didTapArrange() { arrangeCount += 1 }
-    func didTapHistory(from sourceView: NSView) { historyCount += 1 }
     func didBeginToolbarDrag(with event: NSEvent) {}
     func didTapBold() {}
     func didTapBulletList() {}

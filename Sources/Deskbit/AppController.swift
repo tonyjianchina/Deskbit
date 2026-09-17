@@ -2,13 +2,14 @@ import AppKit
 import UserNotifications
 
 @MainActor
-final class AppController: NSObject, NSApplicationDelegate, UNUserNotificationCenterDelegate {
+final class AppController: NSObject, NSApplicationDelegate, UNUserNotificationCenterDelegate, NSPopoverDelegate {
     private var controllers: [UUID: StickyWindowController] = [:]
     private var statusItem: NSStatusItem!
     private let hiddenMenu = NSMenuItem(title: "显示隐藏的便签", action: nil, keyEquivalent: "")
     private var selectedNoteIDs: Set<UUID> = []
     private var selectionOverlay: SelectionOverlayWindowController?
     private var historyPopover: NSPopover?
+    private var historyDismissalMonitor: HistoryPopoverDismissalMonitor?
     private var desktopMouseMonitor: Any?
     private var localMouseMonitor: Any?
     private var desktopSelectionStart: NSPoint?
@@ -57,7 +58,7 @@ final class AppController: NSObject, NSApplicationDelegate, UNUserNotificationCe
         controllers.removeValue(forKey: id)
         selectedNoteIDs.remove(id)
         NoteStore.shared.complete(id: id)
-        historyPopover?.close()
+        dismissHistoryPopover()
         refreshMenu()
     }
 
@@ -160,38 +161,56 @@ final class AppController: NSObject, NSApplicationDelegate, UNUserNotificationCe
 
     func showHistory(relativeTo sourceView: NSView) {
         if historyPopover?.isShown == true {
-            historyPopover?.close()
-            historyPopover = nil
+            dismissHistoryPopover()
             return
         }
         presentHistory(relativeTo: sourceView)
     }
 
     private func presentHistory(relativeTo sourceView: NSView) {
-        historyPopover?.close()
+        dismissHistoryPopover()
         let popover = NSPopover()
         popover.behavior = .transient
         popover.animates = true
+        popover.delegate = self
         popover.contentViewController = HistoryPopoverViewController(
             notes: NoteStore.shared.completedNotes,
             onRestore: { [weak self] id in
                 guard let self else { return }
-                self.historyPopover?.close()
-                self.historyPopover = nil
+                self.dismissHistoryPopover()
                 guard let note = NoteStore.shared.restore(id: id) else { return }
                 self.open(note, focus: true)
                 self.refreshMenu()
             },
-            onDelete: { [weak self, weak sourceView] id in
-                self?.confirmDeleteHistoryNote(id: id, relativeTo: sourceView)
+            onDelete: { [weak self] id in
+                self?.confirmDeleteHistoryNote(id: id)
             },
-            onClear: { [weak self, weak sourceView] in
-                guard let self else { return }
-                self.confirmClearHistory(relativeTo: sourceView)
+            onClear: { [weak self] in
+                self?.confirmClearHistory()
             }
         )
         historyPopover = popover
         popover.show(relativeTo: sourceView.bounds, of: sourceView, preferredEdge: .minY)
+        let dismissalMonitor = HistoryPopoverDismissalMonitor(
+            popoverWindow: { [weak popover] in popover?.contentViewController?.view.window },
+            onDismiss: { [weak self] in self?.dismissHistoryPopover() }
+        )
+        historyDismissalMonitor = dismissalMonitor
+        dismissalMonitor.start()
+    }
+
+    private func dismissHistoryPopover() {
+        historyDismissalMonitor?.stop()
+        historyDismissalMonitor = nil
+        historyPopover?.close()
+        historyPopover = nil
+    }
+
+    func popoverDidClose(_ notification: Notification) {
+        guard notification.object as? NSPopover === historyPopover else { return }
+        historyDismissalMonitor?.stop()
+        historyDismissalMonitor = nil
+        historyPopover = nil
     }
 
     @objc private func showHistoryFromMenu() {
@@ -202,7 +221,8 @@ final class AppController: NSObject, NSApplicationDelegate, UNUserNotificationCe
         }
     }
 
-    private func confirmDeleteHistoryNote(id: UUID, relativeTo sourceView: NSView?) {
+    private func confirmDeleteHistoryNote(id: UUID) {
+        dismissHistoryPopover()
         NSApp.activate(ignoringOtherApps: true)
         let alert = NSAlert()
         alert.messageText = "永久删除这条历史便签？"
@@ -212,15 +232,10 @@ final class AppController: NSObject, NSApplicationDelegate, UNUserNotificationCe
         alert.addButton(withTitle: "取消")
         guard alert.runModal() == .alertFirstButtonReturn else { return }
         _ = NoteStore.shared.permanentlyDelete(id: id)
-        guard let sourceView else {
-            historyPopover?.close()
-            historyPopover = nil
-            return
-        }
-        presentHistory(relativeTo: sourceView)
     }
 
-    private func confirmClearHistory(relativeTo sourceView: NSView?) {
+    private func confirmClearHistory() {
+        dismissHistoryPopover()
         NSApp.activate(ignoringOtherApps: true)
         let alert = NSAlert()
         alert.messageText = "清空所有历史便签？"
@@ -230,12 +245,6 @@ final class AppController: NSObject, NSApplicationDelegate, UNUserNotificationCe
         alert.addButton(withTitle: "取消")
         guard alert.runModal() == .alertFirstButtonReturn else { return }
         NoteStore.shared.clearCompleted()
-        guard let sourceView else {
-            historyPopover?.close()
-            historyPopover = nil
-            return
-        }
-        presentHistory(relativeTo: sourceView)
     }
 
     func beginDragging(noteID: UUID, event: NSEvent) {
