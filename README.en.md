@@ -125,3 +125,7 @@ scripts/           Build and test scripts
 ## Project status
 
 Deskbit is in early testing. Report bugs and suggest features through GitHub Issues.
+
+## License
+
+Deskbit is available under the [MIT License](LICENSE). Contributions are welcome. If Deskbit is useful to you, a GitHub star helps others discover it.

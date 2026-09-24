@@ -125,3 +125,7 @@ scripts/           构建与测试脚本
 ## 当前状态
 
 Deskbit 目前处于早期试用阶段。可以通过 GitHub Issues 反馈问题或提交功能建议。
+
+## 许可证
+
+本项目使用 [MIT 许可证](LICENSE)。欢迎使用、修改和贡献；如果 Deskbit 对你有帮助，欢迎在 GitHub 点一个 Star。
