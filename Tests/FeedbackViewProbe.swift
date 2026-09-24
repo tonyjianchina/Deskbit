@@ -11,7 +11,7 @@ struct FeedbackViewProbe {
             completion(.success(.submitted))
         }
         controller.loadView()
-        controller.view.frame = NSRect(x: 0, y: 0, width: 420, height: 330)
+        controller.view.frame = NSRect(x: 0, y: 0, width: 460, height: 410)
         controller.view.layoutSubtreeIfNeeded()
 
         let views = descendants(of: controller.view)

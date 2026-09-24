@@ -16,15 +16,17 @@ enum FeedbackSubmission {
         var errorDescription: String? {
             switch self {
             case .emptyMessage:
-                return "请输入反馈内容。"
+                return L10n.text("feedback.error.emptyMessage")
             case .networkUnavailable:
-                return "发送失败，请检查网络后重试。"
+                return L10n.text("feedback.error.networkUnavailable")
             case .invalidResponse:
-                return "服务响应异常，请稍后重试。"
+                return L10n.text("feedback.error.invalidResponse")
             case let .rejected(statusCode):
-                return "发送失败（\(statusCode)），请稍后重试。"
+                return L10n.format("feedback.error.rejected", statusCode)
             case let .serviceRejected(message):
-                return message.isEmpty ? "服务未接受这次反馈，请稍后重试。" : message
+                return message.isEmpty
+                    ? L10n.text("feedback.error.serviceRejected")
+                    : L10n.format("feedback.error.serviceRejectedDetail", message)
             }
         }
     }
@@ -35,7 +37,7 @@ enum FeedbackSubmission {
         let endpoint = URL(string: "https://formsubmit.co/ajax/tonyjianchina@gmail.com")!
         let payload = [
             "message": normalizedMessage,
-            "_subject": "Deskbit 用户反馈",
+            "_subject": L10n.text("feedback.emailSubject"),
             "_template": "table",
             "_captcha": "false",
             "_url": "https://github.com/tonyjianchina/Deskbit"

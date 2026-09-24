@@ -1,23 +1,27 @@
 # Deskbit
 
+[简体中文](README.md) · [English](README.en.md)
+
+[官网](https://deskbit.tonyjianchina.chatgpt.site) · [下载最新版本](https://github.com/tonyjianchina/Deskbit/releases/latest)
+
 <p align="center">
   <img src="Assets/Deskbit-icon.png" width="128" alt="Deskbit app icon">
 </p>
 
 <p align="center">一款轻量、原生的 macOS 桌面便签应用。</p>
 
-Deskbit 用来随手记录任务、灵感和备忘。每张便签都是独立窗口，可以自由移动、置顶、批量选择和自动排列。内容只保存在本机，无需账号，也不会上传到服务器。
+Deskbit 用来随手记录任务、灵感和备忘。每张便签都是独立窗口，可以自由移动、置顶、批量选择和自动排列。便签内容只保存在本机，无需账号，也不会上传到服务器。
 
 ## 下载与安装
 
-从 [Releases](https://github.com/tonyjianchina/Deskbit/releases/latest) 下载最新的 `Deskbit-v1.2.1-macOS-universal.zip`。
+下载 [Deskbit-v1.2.2-macOS-universal.zip](https://github.com/tonyjianchina/Deskbit/releases/download/v1.2.2/Deskbit-v1.2.2-macOS-universal.zip)，或前往 [Releases](https://github.com/tonyjianchina/Deskbit/releases/latest) 查看最新版本。
 
 1. 双击 ZIP 解压。
 2. 将 `Deskbit.app` 拖入“应用程序”文件夹。
 3. 在“应用程序”中打开 Deskbit。
 
 > [!IMPORTANT]
-> v1.2.1 已进行本地代码签名，但尚未经过 Apple Developer ID 签名和公证。首次打开可能被 macOS 拦截。请先尝试打开一次，再按系统版本放行：
+> v1.2.2 已进行本地代码签名，但尚未经过 Apple Developer ID 签名和公证。首次打开可能被 macOS 拦截。请先尝试打开一次，再按系统版本放行：
 > - macOS 13 或更高版本：“系统设置 → 隐私与安全性”，在安全性区域点击“仍要打开”。
 > - macOS 11–12：“系统偏好设置 → 安全性与隐私 → 通用”，点击“仍要打开”。
 >
@@ -27,6 +31,14 @@ Deskbit 用来随手记录任务、灵感和备忘。每张便签都是独立窗
 
 - macOS 11 Big Sur 或更高版本
 - Apple Silicon 或 Intel Mac
+
+## 界面语言
+
+从 v1.2.2 起，Deskbit 提供简体中文和英语两种翻译，暂不提供繁体中文翻译。首次启动默认按 macOS 的首选语言顺序，使用最先遇到的中文或英语；中文偏好（包括繁体中文）统一使用简体中文。其他语言会被跳过；如果列表中没有中文或英语，则使用英语。官网也使用相同的语言匹配规则。
+
+在 Deskbit 菜单栏菜单中选择“语言 → 跟随系统 / English / 简体中文”即可切换。手动选择会被记住，应用界面即时更新，无需重启。切换语言不会翻译或修改已有便签内容。
+
+v1.2.2 安装包已包含中英界面，无需从源码构建。
 
 ## 主要功能
 
@@ -76,6 +88,7 @@ Deskbit 用来随手记录任务、灵感和备忘。每张便签都是独立窗
 - 数据保存在 `~/Library/Application Support/Deskbit/notes.json`。
 - 旧版数据会在首次启动新版本时自动迁移。
 - Deskbit 没有账号、云同步、广告或遥测上报。
+- 只有在你主动发送应用内反馈时，填写的反馈正文才会通过第三方服务 FormSubmit 发送给开发者；不会自动附带便签内容。请勿在反馈中填写密码、身份信息等敏感信息。
 
 建议升级或更换电脑前备份上述 `notes.json` 文件。
 
@@ -95,6 +108,7 @@ open "dist/Deskbit.app"
 ### 运行检查
 
 ```bash
+./scripts/build-app.sh
 for test_script in scripts/test-*.sh; do "$test_script"; done
 swift build
 ```

@@ -6,9 +6,10 @@ probe_binary="$(mktemp /tmp/deskbit-feedback-view.XXXXXX)"
 trap 'rm -f "$probe_binary"' EXIT
 
 swiftc \
+  "$project_dir/Sources/Deskbit/Localization.swift" \
   "$project_dir/Sources/Deskbit/FeedbackSubmission.swift" \
   "$project_dir/Sources/Deskbit/FeedbackViews.swift" \
   "$project_dir/Tests/FeedbackViewProbe.swift" \
   -o "$probe_binary"
 
-"$probe_binary"
+"$probe_binary" -DeskbitLanguage zh-Hans

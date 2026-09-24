@@ -23,10 +23,10 @@ enum NoteColor: String, Codable, CaseIterable {
 
     var title: String {
         switch self {
-        case .yellow: return "黄色"
-        case .blue: return "蓝色"
-        case .mint: return "绿色"
-        case .pink: return "粉色"
+        case .yellow: return L10n.text("color.yellow")
+        case .blue: return L10n.text("color.blue")
+        case .mint: return L10n.text("color.mint")
+        case .pink: return L10n.text("color.pink")
         }
     }
 }

@@ -10,4 +10,4 @@ swiftc \
   "$project_dir/Tests/FocusProbe.swift" \
   -o "$probe_binary"
 
-"$probe_binary"
+"$probe_binary" -DeskbitLanguage zh-Hans

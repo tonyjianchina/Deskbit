@@ -5,7 +5,7 @@ import UserNotifications
 final class AppController: NSObject, NSApplicationDelegate, UNUserNotificationCenterDelegate, NSPopoverDelegate, DeskbitStatusMenuTarget {
     private var controllers: [UUID: StickyWindowController] = [:]
     private var statusItem: NSStatusItem!
-    private let hiddenMenu = NSMenuItem(title: "显示隐藏的便签", action: nil, keyEquivalent: "")
+    private let hiddenMenu = NSMenuItem(title: L10n.text("menu.showHidden"), action: nil, keyEquivalent: "")
     private var selectedNoteIDs: Set<UUID> = []
     private var selectionOverlay: SelectionOverlayWindowController?
     private var historyPopover: NSPopover?
@@ -67,7 +67,7 @@ final class AppController: NSObject, NSApplicationDelegate, UNUserNotificationCe
 
         let submenu = NSMenu()
         for note in hidden {
-            let title = note.text.split(separator: "\n").first.map(String.init)?.prefix(28) ?? "空白便签"
+            let title = note.text.split(separator: "\n").first.map(String.init)?.prefix(28) ?? L10n.text("note.untitled").prefix(28)
             let item = NSMenuItem(title: String(title), action: #selector(showHiddenNote(_:)), keyEquivalent: "")
             item.target = self
             item.representedObject = note.id.uuidString
@@ -97,13 +97,34 @@ final class AppController: NSObject, NSApplicationDelegate, UNUserNotificationCe
         statusItem.isVisible = true
         statusItem.button?.image = NSImage(systemSymbolName: "note.text", accessibilityDescription: "Deskbit")
         statusItem.button?.imagePosition = .imageLeading
-        statusItem.button?.title = "便签"
+        statusItem.button?.title = L10n.text("menu.statusTitle")
         statusItem.button?.toolTip = "Deskbit"
         statusItem.menu = DeskbitStatusMenu.make(target: self, hiddenMenu: hiddenMenu)
     }
 
     private func configureMainMenu() {
         NSApp.mainMenu = ApplicationMenu.make()
+    }
+
+    @objc func changeLanguage(_ sender: NSMenuItem) {
+        guard let identifier = sender.representedObject as? String,
+              let language = AppLanguage(rawValue: identifier) else { return }
+        L10n.preference = language
+        // Finish tracking the menu before replacing it.
+        DispatchQueue.main.async { [weak self] in self?.refreshLocalization() }
+    }
+
+    private func refreshLocalization() {
+        configureMainMenu()
+        hiddenMenu.title = L10n.text("menu.showHidden")
+        statusItem.button?.title = L10n.text("menu.statusTitle")
+        statusItem.menu?.removeItem(hiddenMenu)
+        statusItem.menu = DeskbitStatusMenu.make(target: self, hiddenMenu: hiddenMenu)
+        refreshMenu()
+        controllers.values.forEach { $0.refreshLocalization() }
+        dismissHistoryPopover()
+        feedbackWindowController?.window?.title = L10n.text("menu.feedback")
+        (feedbackWindowController?.contentViewController as? FeedbackViewController)?.refreshLocalization()
     }
 
     @objc func newNoteFromMenu() { createNote() }
@@ -201,12 +222,12 @@ final class AppController: NSObject, NSApplicationDelegate, UNUserNotificationCe
                 FeedbackSubmission.submit(message: message, completion: completion)
             }
             let panel = NSPanel(
-                contentRect: NSRect(x: 0, y: 0, width: 420, height: 330),
+                contentRect: NSRect(x: 0, y: 0, width: 460, height: 410),
                 styleMask: [.titled, .closable],
                 backing: .buffered,
                 defer: false
             )
-            panel.title = "用户反馈"
+            panel.title = L10n.text("menu.feedback")
             panel.isReleasedWhenClosed = false
             panel.isFloatingPanel = false
             panel.level = .normal
@@ -226,11 +247,11 @@ final class AppController: NSObject, NSApplicationDelegate, UNUserNotificationCe
         dismissHistoryPopover()
         NSApp.activate(ignoringOtherApps: true)
         let alert = NSAlert()
-        alert.messageText = "永久删除这条历史便签？"
-        alert.informativeText = "这项操作无法撤销。"
+        alert.messageText = L10n.text("history.deleteConfirm")
+        alert.informativeText = L10n.text("common.irreversible")
         alert.alertStyle = .warning
-        alert.addButton(withTitle: "删除")
-        alert.addButton(withTitle: "取消")
+        alert.addButton(withTitle: L10n.text("common.delete"))
+        alert.addButton(withTitle: L10n.text("common.cancel"))
         guard alert.runModal() == .alertFirstButtonReturn else { return }
         _ = NoteStore.shared.permanentlyDelete(id: id)
     }
@@ -239,11 +260,11 @@ final class AppController: NSObject, NSApplicationDelegate, UNUserNotificationCe
         dismissHistoryPopover()
         NSApp.activate(ignoringOtherApps: true)
         let alert = NSAlert()
-        alert.messageText = "清空所有历史便签？"
-        alert.informativeText = "这项操作无法撤销。"
+        alert.messageText = L10n.text("history.clearConfirm")
+        alert.informativeText = L10n.text("common.irreversible")
         alert.alertStyle = .warning
-        alert.addButton(withTitle: "清空")
-        alert.addButton(withTitle: "取消")
+        alert.addButton(withTitle: L10n.text("common.clear"))
+        alert.addButton(withTitle: L10n.text("common.cancel"))
         guard alert.runModal() == .alertFirstButtonReturn else { return }
         NoteStore.shared.clearCompleted()
     }

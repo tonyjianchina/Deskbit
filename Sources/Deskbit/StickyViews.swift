@@ -83,7 +83,7 @@ final class StickyToolbarView: NSView {
         stack.translatesAutoresizingMaskIntoConstraints = false
         addSubview(stack)
 
-        stack.addArrangedSubview(iconButton("rectangle.3.group", tip: "自动排序便签", action: #selector(arrangeNotes)))
+        stack.addArrangedSubview(iconButton("rectangle.3.group", tip: L10n.text("menu.arrange"), action: #selector(arrangeNotes)))
 
         let spacer = NSView()
         spacer.setContentHuggingPriority(.defaultLow, for: .horizontal)
@@ -98,10 +98,10 @@ final class StickyToolbarView: NSView {
             stack.addArrangedSubview(button)
         }
 
-        stack.addArrangedSubview(iconButton("plus", tip: "新建便签", action: #selector(newNote)))
-        pinButton = iconButton(isPinned ? "pin.fill" : "pin", tip: "置顶", action: #selector(togglePin))
+        stack.addArrangedSubview(iconButton("plus", tip: L10n.text("menu.newNote"), action: #selector(newNote)))
+        pinButton = iconButton(isPinned ? "pin.fill" : "pin", tip: L10n.text("note.pin"), action: #selector(togglePin))
         stack.addArrangedSubview(pinButton)
-        stack.addArrangedSubview(iconButton("checkmark", tip: "完成", action: #selector(completeNoteButton)))
+        stack.addArrangedSubview(iconButton("checkmark", tip: L10n.text("note.complete"), action: #selector(completeNoteButton)))
 
         NSLayoutConstraint.activate([
             heightAnchor.constraint(equalToConstant: 40),
@@ -144,8 +144,31 @@ final class StickyToolbarView: NSView {
 
     func update(color: NoteColor, isPinned: Bool) {
         colorButtons.forEach { $0.selectedColor = $0.noteColor == color }
-        pinButton.image = NSImage(systemSymbolName: isPinned ? "pin.fill" : "pin", accessibilityDescription: "置顶")
+        let pinTitle = L10n.text(isPinned ? "note.unpin" : "note.pin")
+        pinButton.image = NSImage(systemSymbolName: isPinned ? "pin.fill" : "pin", accessibilityDescription: pinTitle)
+        pinButton.toolTip = pinTitle
+        pinButton.setAccessibilityLabel(pinTitle)
         pinButton.contentTintColor = isPinned ? NSColor.black.withAlphaComponent(0.82) : NSColor.black.withAlphaComponent(0.58)
+    }
+
+    func refreshLocalization(color: NoteColor, isPinned: Bool) {
+        for button in stack.arrangedSubviews.compactMap({ $0 as? NSButton }) {
+            let key: String
+            if let swatch = button as? ColorDotButton {
+                button.toolTip = swatch.noteColor.title
+                button.setAccessibilityLabel(swatch.noteColor.title)
+                continue
+            }
+            switch button.action {
+            case #selector(arrangeNotes): key = "menu.arrange"
+            case #selector(newNote): key = "menu.newNote"
+            case #selector(completeNoteButton): key = "note.complete"
+            default: continue
+            }
+            button.toolTip = L10n.text(key)
+            button.setAccessibilityLabel(L10n.text(key))
+        }
+        update(color: color, isPinned: isPinned)
     }
 
     @objc private func selectColor(_ sender: ColorDotButton) { delegate?.didChooseColor(sender.noteColor) }
@@ -157,15 +180,15 @@ final class StickyToolbarView: NSView {
 
 final class StickyFormattingFooterView: NSView {
     weak var delegate: StickyToolbarDelegate?
-    let statusLabel = NSTextField(labelWithString: "已保存")
+    let statusLabel = NSTextField(labelWithString: L10n.text("note.saved"))
     private let boldButton: NSButton
     private let bulletButton: NSButton
     private let strikethroughButton: NSButton
 
     override init(frame frameRect: NSRect) {
-        boldButton = Self.makeButton(symbol: "bold", tip: "加粗（⌘B）", action: #selector(toggleBold))
-        bulletButton = Self.makeButton(symbol: "list.bullet", tip: "项目符号（⌘⇧8；Tab / Shift+Tab 调整级别）", action: #selector(toggleBullet))
-        strikethroughButton = Self.makeButton(symbol: "strikethrough", tip: "删除线（⌘⇧X）", action: #selector(toggleStrikethrough))
+        boldButton = Self.makeButton(symbol: "bold", tip: L10n.text("format.bold"), action: #selector(toggleBold))
+        bulletButton = Self.makeButton(symbol: "list.bullet", tip: L10n.text("format.bullets"), action: #selector(toggleBullet))
+        strikethroughButton = Self.makeButton(symbol: "strikethrough", tip: L10n.text("format.strikethrough"), action: #selector(toggleStrikethrough))
         super.init(frame: frameRect)
         translatesAutoresizingMaskIntoConstraints = false
 
@@ -182,6 +205,8 @@ final class StickyFormattingFooterView: NSView {
         statusLabel.font = NSFont.systemFont(ofSize: 11, weight: .regular)
         statusLabel.textColor = NSColor.black.withAlphaComponent(0.42)
         statusLabel.alignment = .right
+        statusLabel.lineBreakMode = .byTruncatingTail
+        statusLabel.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
         statusLabel.translatesAutoresizingMaskIntoConstraints = false
         addSubview(statusLabel)
 
@@ -201,6 +226,13 @@ final class StickyFormattingFooterView: NSView {
         update(button: boldButton, active: isBold)
         update(button: bulletButton, active: isBulletList)
         update(button: strikethroughButton, active: isStrikethrough)
+    }
+
+    func refreshLocalization() {
+        for (button, key) in [(boldButton, "format.bold"), (bulletButton, "format.bullets"), (strikethroughButton, "format.strikethrough")] {
+            button.toolTip = L10n.text(key)
+            button.setAccessibilityLabel(L10n.text(key))
+        }
     }
 
     private static func makeButton(symbol: String, tip: String, action: Selector) -> NSButton {
@@ -330,7 +362,7 @@ final class StickyRootView: NSView {
         textView.textContainerInset = NSSize(width: 14, height: 12)
         textView.textContainer?.widthTracksTextView = true
         textView.autoresizingMask = [.width]
-        textView.setAccessibilityLabel("便签内容")
+        textView.setAccessibilityLabel(L10n.text("note.content"))
         if let restored = RichTextCodec.decode(note.richTextData) {
             textView.textStorage?.setAttributedString(restored)
         } else {

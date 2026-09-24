@@ -189,7 +189,7 @@ final class StickyWindowController: NSWindowController, NSWindowDelegate, NSText
             StickyWindowPresentation.apply(isPinned: note.isPinned, to: window)
         }
         rootView.toolbar.update(color: note.color, isPinned: note.isPinned)
-        rootView.statusLabel.stringValue = note.isPinned ? "已置顶 · 已保存" : "已保存"
+        rootView.statusLabel.stringValue = note.isPinned ? L10n.text("note.pinnedSaved") : L10n.text("note.saved")
         if isBecomingPinned {
             window?.orderFrontRegardless()
             if focusWhenPinned {
@@ -221,7 +221,7 @@ final class StickyWindowController: NSWindowController, NSWindowDelegate, NSText
         } else {
             StickyWindowPresentation.apply(isPinned: false, to: window)
             rootView.toolbar.update(color: note.color, isPinned: false)
-            rootView.statusLabel.stringValue = "已保存"
+            rootView.statusLabel.stringValue = L10n.text("note.saved")
         }
         move(to: frame)
         self.window?.orderBack(nil)
@@ -247,7 +247,7 @@ final class StickyWindowController: NSWindowController, NSWindowDelegate, NSText
             note.richTextData = RichTextCodec.encode(storage)
         }
         NoteStore.shared.update(note)
-        rootView.statusLabel.stringValue = "正在保存…"
+        rootView.statusLabel.stringValue = L10n.text("note.saving")
         saveStatusTimer?.invalidate()
         saveStatusTimer = Timer.scheduledTimer(
             timeInterval: 0.45,
@@ -267,8 +267,19 @@ final class StickyWindowController: NSWindowController, NSWindowDelegate, NSText
         )
     }
 
+    func refreshLocalization() {
+        rootView.toolbar.refreshLocalization(color: note.color, isPinned: note.isPinned)
+        rootView.footer.refreshLocalization()
+        rootView.textView.setAccessibilityLabel(L10n.text("note.content"))
+        if saveStatusTimer?.isValid == true {
+            rootView.statusLabel.stringValue = L10n.text("note.saving")
+        } else {
+            markSaved()
+        }
+    }
+
     @objc private func markSaved() {
-        rootView.statusLabel.stringValue = note.isPinned ? "已置顶 · 已保存" : "已保存"
+        rootView.statusLabel.stringValue = note.isPinned ? L10n.text("note.pinnedSaved") : L10n.text("note.saved")
     }
 
     private func saveFrame() {

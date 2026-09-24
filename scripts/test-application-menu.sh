@@ -6,8 +6,9 @@ probe_binary="$(mktemp /tmp/deskbit-application-menu.XXXXXX)"
 trap 'rm -f "$probe_binary"' EXIT
 
 swiftc \
+  "$project_dir/Sources/Deskbit/Localization.swift" \
   "$project_dir/Sources/Deskbit/ApplicationMenu.swift" \
   "$project_dir/Tests/ApplicationMenuProbe.swift" \
   -o "$probe_binary"
 
-"$probe_binary"
+"$probe_binary" -DeskbitLanguage zh-Hans

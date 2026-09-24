@@ -6,6 +6,7 @@ probe_binary="$(mktemp /tmp/deskbit-toolbar.XXXXXX)"
 trap 'rm -f "$probe_binary"' EXIT
 
 swiftc \
+  "$project_dir/Sources/Deskbit/Localization.swift" \
   "$project_dir/Sources/Deskbit/NoteAppearance.swift" \
   "$project_dir/Sources/Deskbit/Models.swift" \
   "$project_dir/Sources/Deskbit/RichTextCodec.swift" \
@@ -13,4 +14,4 @@ swiftc \
   "$project_dir/Tests/ToolbarProbe.swift" \
   -o "$probe_binary"
 
-"$probe_binary"
+"$probe_binary" -DeskbitLanguage zh-Hans

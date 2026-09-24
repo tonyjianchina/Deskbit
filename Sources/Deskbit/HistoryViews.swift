@@ -27,11 +27,11 @@ final class HistoryPopoverViewController: NSViewController {
         let root = NSView()
         root.translatesAutoresizingMaskIntoConstraints = false
 
-        let title = NSTextField(labelWithString: "历史便签")
+        let title = NSTextField(labelWithString: L10n.text("history.title"))
         title.font = .systemFont(ofSize: 15, weight: .semibold)
         title.textColor = NSColor.labelColor
 
-        let count = NSTextField(labelWithString: "\(notes.count) 条")
+        let count = NSTextField(labelWithString: L10n.noteCount(notes.count))
         count.font = .systemFont(ofSize: 11, weight: .medium)
         count.textColor = .secondaryLabelColor
 
@@ -60,7 +60,7 @@ final class HistoryPopoverViewController: NSViewController {
         scrollView.documentView = document
 
         if notes.isEmpty {
-            let empty = NSTextField(labelWithString: "暂无历史便签")
+            let empty = NSTextField(labelWithString: L10n.text("history.empty"))
             empty.alignment = .center
             empty.font = .systemFont(ofSize: 13)
             empty.textColor = .tertiaryLabelColor
@@ -87,13 +87,13 @@ final class HistoryPopoverViewController: NSViewController {
             list.bottomAnchor.constraint(lessThanOrEqualTo: document.bottomAnchor, constant: -2)
         ])
 
-        let clearButton = NSButton(title: "清空历史", target: self, action: #selector(clearHistory))
+        let clearButton = NSButton(title: L10n.text("history.clear"), target: self, action: #selector(clearHistory))
         clearButton.bezelStyle = .inline
         clearButton.font = .systemFont(ofSize: 12)
         clearButton.contentTintColor = .systemRed
         clearButton.isEnabled = !notes.isEmpty
         clearButton.translatesAutoresizingMaskIntoConstraints = false
-        clearButton.setAccessibilityLabel("清空历史便签")
+        clearButton.setAccessibilityLabel(L10n.text("history.clear.accessibility"))
         root.addSubview(clearButton)
 
         NSLayoutConstraint.activate([
@@ -142,7 +142,7 @@ private final class HistoryNoteRowView: NSView {
         let previewText = note.text
             .split(whereSeparator: \Character.isNewline)
             .map(String.init)
-            .first(where: { !$0.trimmingCharacters(in: .whitespaces).isEmpty }) ?? "空白便签"
+            .first(where: { !$0.trimmingCharacters(in: .whitespaces).isEmpty }) ?? L10n.text("history.blankNote")
         let preview = NSTextField(labelWithString: String(previewText.prefix(34)))
         preview.font = .systemFont(ofSize: 13, weight: .medium)
         preview.textColor = NSColor.labelColor.withAlphaComponent(0.82)
@@ -160,21 +160,21 @@ private final class HistoryNoteRowView: NSView {
         labels.setContentHuggingPriority(.defaultLow, for: .horizontal)
         addSubview(labels)
 
-        let restore = NSButton(title: "恢复", target: self, action: #selector(restoreNote))
+        let restore = NSButton(title: L10n.text("history.restore"), target: self, action: #selector(restoreNote))
         restore.bezelStyle = .inline
         restore.font = .systemFont(ofSize: 12, weight: .medium)
-        restore.toolTip = "恢复便签"
-        restore.setAccessibilityLabel("恢复便签")
+        restore.toolTip = L10n.text("history.restore.accessibility")
+        restore.setAccessibilityLabel(L10n.text("history.restore.accessibility"))
         restore.translatesAutoresizingMaskIntoConstraints = false
         addSubview(restore)
 
-        let trashImage = NSImage(systemSymbolName: "trash", accessibilityDescription: "永久删除便签")
+        let trashImage = NSImage(systemSymbolName: "trash", accessibilityDescription: L10n.text("history.delete.accessibility"))
         let delete = NSButton(image: trashImage ?? NSImage(), target: self, action: #selector(deleteNote))
         delete.isBordered = false
         delete.imagePosition = .imageOnly
         delete.contentTintColor = NSColor.systemRed.withAlphaComponent(0.74)
-        delete.toolTip = "永久删除"
-        delete.setAccessibilityLabel("永久删除便签")
+        delete.toolTip = L10n.text("history.delete")
+        delete.setAccessibilityLabel(L10n.text("history.delete.accessibility"))
         delete.translatesAutoresizingMaskIntoConstraints = false
         addSubview(delete)
 
@@ -188,7 +188,7 @@ private final class HistoryNoteRowView: NSView {
             labels.trailingAnchor.constraint(lessThanOrEqualTo: restore.leadingAnchor, constant: -6),
             restore.trailingAnchor.constraint(equalTo: delete.leadingAnchor, constant: -2),
             restore.centerYAnchor.constraint(equalTo: centerYAnchor),
-            restore.widthAnchor.constraint(equalToConstant: 42),
+            restore.widthAnchor.constraint(greaterThanOrEqualToConstant: 62),
             delete.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -8),
             delete.centerYAnchor.constraint(equalTo: centerYAnchor),
             delete.widthAnchor.constraint(equalToConstant: 26),
@@ -202,10 +202,10 @@ private final class HistoryNoteRowView: NSView {
     @objc private func deleteNote() { onDelete(noteID) }
 
     private static func formattedDate(_ date: Date?) -> String {
-        guard let date else { return "完成时间未知" }
+        guard let date else { return L10n.text("history.unknownCompletionTime") }
         let formatter = DateFormatter()
-        formatter.locale = Locale(identifier: "zh_CN")
-        formatter.dateFormat = "M月d日 HH:mm"
+        formatter.locale = L10n.locale
+        formatter.setLocalizedDateFormatFromTemplate("MMMdjm")
         return formatter.string(from: date)
     }
 }

@@ -38,11 +38,11 @@ struct HistoryViewProbe {
         controls.first(where: { $0.accessibilityLabel() == "清空历史便签" })?.performClick(nil)
         guard restoredID == second.id, deletedID == second.id, clearCount == 1 else { exit(3) }
 
-        if CommandLine.arguments.count > 1,
+        if let capturePath = CommandLine.arguments.dropFirst().first(where: { $0.hasSuffix(".png") }),
            let bitmap = controller.view.bitmapImageRepForCachingDisplay(in: controller.view.bounds) {
             controller.view.cacheDisplay(in: controller.view.bounds, to: bitmap)
             if let data = bitmap.representation(using: .png, properties: [:]) {
-                try? data.write(to: URL(fileURLWithPath: CommandLine.arguments[1]))
+                try? data.write(to: URL(fileURLWithPath: capturePath))
             }
         }
 
