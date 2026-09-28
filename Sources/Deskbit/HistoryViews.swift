@@ -74,9 +74,14 @@ final class HistoryPopoverViewController: NSViewController {
                 row.heightAnchor.constraint(equalToConstant: 64).isActive = true
             }
         }
-        let listContentHeight: CGFloat = notes.isEmpty
-            ? 92
-            : CGFloat(notes.count * 64 + max(0, notes.count - 1) * 8 + 4)
+        let listContentHeight: CGFloat
+        if notes.isEmpty {
+            listContentHeight = 92
+        } else {
+            let rowCount = CGFloat(notes.count)
+            let spacingCount = CGFloat(notes.count - 1)
+            listContentHeight = rowCount * 64 + spacingCount * 8 + 4
+        }
 
         NSLayoutConstraint.activate([
             document.widthAnchor.constraint(equalTo: scrollView.contentView.widthAnchor),
