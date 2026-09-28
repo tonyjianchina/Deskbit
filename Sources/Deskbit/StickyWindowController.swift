@@ -28,10 +28,10 @@ final class StickyWindowController: NSWindowController, NSWindowDelegate, NSText
         rootView.textView.delegate = self
         rootView.textView.onToggleBold = { [weak self] in self?.didTapBold() }
         rootView.textView.onToggleBulletList = { [weak self] in self?.didTapBulletList() }
-        rootView.textView.onToggleStrikethrough = { [weak self] in self?.didTapStrikethrough() }
-        rootView.textView.onListNewline = { [weak self] in
+        rootView.textView.onToggleTodo = { [weak self] in self?.didTapTodo() }
+        rootView.textView.onStructuredNewline = { [weak self] in
             guard let self else { return false }
-            return RichTextFormatting.handleListNewline(in: self.rootView.textView)
+            return RichTextFormatting.handleStructuredNewline(in: self.rootView.textView)
         }
         rootView.textView.onAdjustBulletLevel = { [weak self] delta in
             guard let self else { return false }
@@ -118,9 +118,9 @@ final class StickyWindowController: NSWindowController, NSWindowDelegate, NSText
         window?.makeFirstResponder(textView)
     }
 
-    func didTapStrikethrough() {
+    func didTapTodo() {
         let textView = rootView.textView
-        RichTextFormatting.toggleStrikethrough(in: textView)
+        RichTextFormatting.toggleTodo(in: textView)
         textView.didChangeText()
         window?.makeFirstResponder(textView)
     }
@@ -263,7 +263,7 @@ final class StickyWindowController: NSWindowController, NSWindowDelegate, NSText
         rootView.footer.updateFormatting(
             isBold: RichTextFormatting.isBold(in: textView),
             isBulletList: RichTextFormatting.isBulletList(in: textView),
-            isStrikethrough: RichTextFormatting.isStrikethrough(in: textView)
+            isTodoItem: RichTextFormatting.todoState(in: textView) != .plain
         )
     }
 

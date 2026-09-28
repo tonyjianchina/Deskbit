@@ -2,10 +2,18 @@ import AppKit
 
 @MainActor
 enum RichTextFormatting {
+    enum TodoState: Equatable {
+        case plain
+        case pending
+        case completed
+    }
+
     private static let listIndentStep: CGFloat = 18
     private static let maximumListLevel = 8
     private static let bulletMarkers = ["•", "∘", "▪"]
     private static let legacyBulletMarkers = ["◦", "○"]
+    private static let pendingTodoMarker = "☐"
+    private static let completedTodoMarker = "☑"
 
     static func toggleBold(in textView: NSTextView) {
         let storage = textView.textStorage ?? NSTextStorage()
@@ -32,26 +40,43 @@ enum RichTextFormatting {
         }
     }
 
-    static func toggleStrikethrough(in textView: NSTextView) {
+    static func toggleTodo(in textView: NSTextView) {
         guard let storage = textView.textStorage else { return }
         let selected = textView.selectedRange()
-        let shouldStrike = !isStrikethrough(in: textView)
+        let starts = paragraphStarts(in: storage.string, selection: selected)
+        var newLocation = selected.location
+        var newLength = selected.length
 
-        if selected.length > 0 {
-            if shouldStrike {
-                storage.addAttribute(.strikethroughStyle, value: NSUnderlineStyle.single.rawValue, range: selected)
-            } else {
-                storage.removeAttribute(.strikethroughStyle, range: selected)
+        storage.beginEditing()
+        for start in starts.reversed() {
+            switch todoState(in: storage.string, at: start) {
+            case .plain:
+                if hasBullet(in: storage.string, at: start) {
+                    storage.replaceCharacters(in: NSRange(location: start, length: 1), with: pendingTodoMarker)
+                    applyListIndent(false, storage: storage, location: start)
+                } else {
+                    storage.replaceCharacters(in: NSRange(location: start, length: 0), with: "\(pendingTodoMarker) ")
+                    adjustSelection(location: &newLocation, length: &newLength, changeAt: start, delta: 2)
+                }
+                applyTodoCompletion(false, storage: storage, paragraphStart: start)
+            case .pending:
+                storage.replaceCharacters(in: NSRange(location: start, length: 1), with: completedTodoMarker)
+                applyTodoCompletion(true, storage: storage, paragraphStart: start)
+            case .completed:
+                storage.replaceCharacters(in: NSRange(location: start, length: 2), with: "")
+                adjustSelection(location: &newLocation, length: &newLength, changeAt: start, delta: -2)
+                applyTodoCompletion(false, storage: storage, paragraphStart: min(start, storage.length))
             }
-        } else {
-            var typing = textView.typingAttributes
-            if shouldStrike {
-                typing[.strikethroughStyle] = NSUnderlineStyle.single.rawValue
-            } else {
-                typing.removeValue(forKey: .strikethroughStyle)
-            }
-            textView.typingAttributes = typing
         }
+        storage.endEditing()
+
+        let selection = NSRange(
+            location: min(newLocation, storage.length),
+            length: min(newLength, max(0, storage.length - newLocation))
+        )
+        textView.setSelectedRange(selection)
+        setTypingListIndent(false, textView: textView)
+        setTypingTodoCompletion(todoState(in: textView) == .completed, textView: textView)
     }
 
     static func toggleBulletList(in textView: NSTextView) {
@@ -69,13 +94,19 @@ enum RichTextFormatting {
                 adjustSelection(location: &newLocation, length: &newLength, changeAt: start, delta: -2)
                 applyListIndent(false, storage: storage, location: min(start, storage.length))
             } else if !allBulleted, !hasBullet(in: storage.string, at: start) {
-                storage.replaceCharacters(in: NSRange(location: start, length: 0), with: "• ")
-                adjustSelection(location: &newLocation, length: &newLength, changeAt: start, delta: 2)
+                if todoState(in: storage.string, at: start) == .plain {
+                    storage.replaceCharacters(in: NSRange(location: start, length: 0), with: "• ")
+                    adjustSelection(location: &newLocation, length: &newLength, changeAt: start, delta: 2)
+                } else {
+                    storage.replaceCharacters(in: NSRange(location: start, length: 1), with: "•")
+                    applyTodoCompletion(false, storage: storage, paragraphStart: start)
+                }
                 applyListIndent(true, storage: storage, location: start)
             }
         }
         storage.endEditing()
         setTypingListIndent(!allBulleted, textView: textView)
+        if !allBulleted { setTypingTodoCompletion(false, textView: textView) }
         textView.setSelectedRange(NSRange(location: min(newLocation, storage.length), length: min(newLength, max(0, storage.length - newLocation))))
     }
 
@@ -161,22 +192,10 @@ enum RichTextFormatting {
         NSFontManager.shared.traits(of: font(in: textView)).contains(.boldFontMask)
     }
 
-    static func isStrikethrough(in textView: NSTextView) -> Bool {
-        let selected = textView.selectedRange()
-        let value: Any?
-        if selected.length == 0 {
-            value = textView.typingAttributes[.strikethroughStyle]
-        } else if let storage = textView.textStorage, storage.length > 0 {
-            value = storage.attribute(
-                .strikethroughStyle,
-                at: min(selected.location, storage.length - 1),
-                effectiveRange: nil
-            )
-        } else {
-            value = nil
-        }
-        return (value as? NSNumber)?.intValue == NSUnderlineStyle.single.rawValue
-            || (value as? Int) == NSUnderlineStyle.single.rawValue
+    static func todoState(in textView: NSTextView) -> TodoState {
+        guard let storage = textView.textStorage else { return .plain }
+        let start = paragraphStarts(in: storage.string, selection: textView.selectedRange()).first ?? 0
+        return todoState(in: storage.string, at: start)
     }
 
     static func isBulletList(in textView: NSTextView) -> Bool {
@@ -208,22 +227,6 @@ enum RichTextFormatting {
             }
         }
 
-        if let expression = try? NSRegularExpression(pattern: #"~~([^~\n]+)~~"#) {
-            let matches = expression.matches(in: storage.string, range: NSRange(location: 0, length: storage.length))
-            for match in matches.reversed() {
-                let innerRange = NSRange(location: match.range.location + 2, length: match.range.length - 4)
-                let replacement = NSMutableAttributedString(attributedString: storage.attributedSubstring(from: innerRange))
-                replacement.addAttribute(
-                    .strikethroughStyle,
-                    value: NSUnderlineStyle.single.rawValue,
-                    range: NSRange(location: 0, length: replacement.length)
-                )
-                storage.replaceCharacters(in: match.range, with: replacement)
-                selection = adjustedSelection(selection, replacing: match.range, markerWidth: 2)
-                changed = true
-            }
-        }
-
         if let expression = try? NSRegularExpression(pattern: #"(?m)^[*-] "#) {
             let matches = expression.matches(in: storage.string, range: NSRange(location: 0, length: storage.length))
             for match in matches.reversed() {
@@ -241,7 +244,7 @@ enum RichTextFormatting {
         return changed
     }
 
-    static func handleListNewline(in textView: NSTextView) -> Bool {
+    static func handleStructuredNewline(in textView: NSTextView) -> Bool {
         guard let storage = textView.textStorage else { return false }
         let selection = textView.selectedRange()
         guard selection.length == 0, selection.location <= storage.length else { return false }
@@ -250,6 +253,31 @@ enum RichTextFormatting {
         let paragraph = storage.length == 0
             ? NSRange(location: 0, length: 0)
             : nsString.paragraphRange(for: NSRange(location: lookup, length: 0))
+
+        let taskState = todoState(in: storage.string, at: paragraph.location)
+        if taskState != .plain {
+            let marker = taskState == .pending ? pendingTodoMarker : completedTodoMarker
+            let content = nsString.substring(with: paragraph).trimmingCharacters(in: .whitespacesAndNewlines)
+            setTypingTodoCompletion(false, textView: textView)
+            if content == marker {
+                storage.replaceCharacters(in: NSRange(location: paragraph.location, length: 2), with: "")
+                textView.setSelectedRange(NSRange(location: paragraph.location, length: 0))
+                textView.didChangeText()
+            } else {
+                let insertion = NSAttributedString(
+                    string: "\n\(pendingTodoMarker) ",
+                    attributes: textView.typingAttributes
+                )
+                storage.beginEditing()
+                storage.replaceCharacters(in: selection, with: insertion)
+                applyTodoCompletion(false, storage: storage, paragraphStart: selection.location + 1)
+                storage.endEditing()
+                textView.setSelectedRange(NSRange(location: selection.location + insertion.length, length: 0))
+                textView.didChangeText()
+            }
+            return true
+        }
+
         guard let marker = bulletMarker(in: storage.string, at: paragraph.location) else { return false }
 
         let content = nsString.substring(with: paragraph).trimmingCharacters(in: .whitespacesAndNewlines)
@@ -298,6 +326,48 @@ enum RichTextFormatting {
 
     private static func hasBullet(in string: String, at location: Int) -> Bool {
         bulletMarker(in: string, at: location) != nil
+    }
+
+    private static func todoState(in string: String, at location: Int) -> TodoState {
+        let nsString = string as NSString
+        guard location + 2 <= nsString.length,
+              nsString.substring(with: NSRange(location: location + 1, length: 1)) == " " else { return .plain }
+        switch nsString.substring(with: NSRange(location: location, length: 1)) {
+        case pendingTodoMarker: return .pending
+        case completedTodoMarker: return .completed
+        default: return .plain
+        }
+    }
+
+    private static func applyTodoCompletion(_ completed: Bool, storage: NSTextStorage, paragraphStart: Int) {
+        guard storage.length > 0, paragraphStart < storage.length else { return }
+        let nsString = storage.string as NSString
+        let paragraph = nsString.paragraphRange(for: NSRange(location: paragraphStart, length: 0))
+        storage.removeAttribute(.strikethroughStyle, range: paragraph)
+        guard completed else { return }
+
+        let contentStart = min(paragraphStart + 2, NSMaxRange(paragraph))
+        var contentEnd = NSMaxRange(paragraph)
+        if contentEnd > contentStart,
+           nsString.substring(with: NSRange(location: contentEnd - 1, length: 1)) == "\n" {
+            contentEnd -= 1
+        }
+        guard contentEnd > contentStart else { return }
+        storage.addAttribute(
+            .strikethroughStyle,
+            value: NSUnderlineStyle.single.rawValue,
+            range: NSRange(location: contentStart, length: contentEnd - contentStart)
+        )
+    }
+
+    private static func setTypingTodoCompletion(_ completed: Bool, textView: NSTextView) {
+        var typing = textView.typingAttributes
+        if completed {
+            typing[.strikethroughStyle] = NSUnderlineStyle.single.rawValue
+        } else {
+            typing.removeValue(forKey: .strikethroughStyle)
+        }
+        textView.typingAttributes = typing
     }
 
     private static func bulletMarker(in string: String, at location: Int) -> String? {

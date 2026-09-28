@@ -42,6 +42,18 @@ struct ToolbarProbe {
         let root = StickyRootView(note: .fresh())
         guard root.textView.font?.pointSize == NoteAppearance.bodyFontSize else { exit(9) }
 
+        let footer = StickyFormattingFooterView()
+        footer.delegate = delegate
+        guard let formattingStack = footer.subviews.compactMap({ $0 as? NSStackView }).first else { exit(10) }
+        let formattingButtons = formattingStack.arrangedSubviews.compactMap { $0 as? NSButton }
+        guard formattingButtons.compactMap({ $0.accessibilityLabel() }) == [
+            "加粗（⌘B）",
+            "项目符号（⌘⇧8；Tab / Shift+Tab 调整级别）",
+            "待办事项（⌘⇧X）"
+        ] else { exit(13) }
+        formattingButtons[2].performClick(nil)
+        guard delegate.todoCount == 1 else { exit(14) }
+
         print("toolbar layout: pass")
     }
 }
@@ -49,13 +61,14 @@ struct ToolbarProbe {
 @MainActor
 private final class ToolbarDelegateProbe: StickyToolbarDelegate {
     var arrangeCount = 0
+    var todoCount = 0
 
     func didChooseColor(_ color: NoteColor) {}
     func didTapArrange() { arrangeCount += 1 }
     func didBeginToolbarDrag(with event: NSEvent) {}
     func didTapBold() {}
     func didTapBulletList() {}
-    func didTapStrikethrough() {}
+    func didTapTodo() { todoCount += 1 }
     func didTapNew() {}
     func didTapPin() {}
     func didTapComplete() {}

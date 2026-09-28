@@ -56,7 +56,7 @@ Release builds that include Sparkle show **Check for Updates…** in the menu ba
 ## Features
 
 - Four note colors: yellow, blue, green, and pink
-- Bold, bullet lists, and strikethrough using toolbar buttons, keyboard shortcuts, or Markdown
+- Bold, bullet lists, and three-state to-do items using toolbar buttons or keyboard shortcuts
 - Nested bullet lists with `•`, `∘`, and `▪` markers
 - Drag to select multiple notes on the Finder desktop, then move, pin, or unpin them together
 - Automatically arrange all notes or just the selected notes
@@ -92,7 +92,7 @@ Select text to cut, copy, and paste with `⌘X`, `⌘C`, and `⌘V`. Use `⌘A` 
 | --- | --- | --- | --- |
 | Bold | `B` in the bottom toolbar | `⌘B` | `**text**` |
 | Bullet list | List icon in the bottom toolbar | `⌘⇧8` | Type `- ` or `* ` at the start of a line |
-| Strikethrough | Strikethrough icon in the bottom toolbar | `⌘⇧X` | `~~text~~` |
+| To-do item | To-do icon in the bottom toolbar | `⌘⇧X` | Repeated use cycles `☐` → `☑` + strikethrough → plain text |
 | Increase list indentation | — | `Tab` | — |
 | Decrease list indentation | — | `Shift+Tab` | — |
 

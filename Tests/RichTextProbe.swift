@@ -48,14 +48,63 @@ struct RichTextProbe {
         RichTextFormatting.toggleBold(in: editor)
         let futureBoldOff = !RichTextFormatting.isBold(in: editor)
 
-        let strikeEditor = NSTextView()
-        strikeEditor.isRichText = true
-        strikeEditor.string = "删除线"
-        strikeEditor.setSelectedRange(NSRange(location: 0, length: strikeEditor.string.utf16.count))
-        RichTextFormatting.toggleStrikethrough(in: strikeEditor)
-        let strikeOn = RichTextFormatting.isStrikethrough(in: strikeEditor)
-        RichTextFormatting.toggleStrikethrough(in: strikeEditor)
-        let strikeOff = !RichTextFormatting.isStrikethrough(in: strikeEditor)
+        let todoEditor = NSTextView()
+        todoEditor.isRichText = true
+        todoEditor.string = "第一项\n第二项"
+        todoEditor.setSelectedRange(NSRange(location: 0, length: todoEditor.string.utf16.count))
+        RichTextFormatting.toggleTodo(in: todoEditor)
+        let todoPending = todoEditor.string == "☐ 第一项\n☐ 第二项"
+            && RichTextFormatting.todoState(in: todoEditor) == .pending
+        RichTextFormatting.toggleTodo(in: todoEditor)
+        let firstTaskTextRange = NSRange(location: 2, length: 3)
+        let firstTaskStrike = (todoEditor.textStorage?.attribute(.strikethroughStyle, at: firstTaskTextRange.location, effectiveRange: nil) as? NSNumber)?.intValue
+        let todoCompleted = todoEditor.string == "☑ 第一项\n☑ 第二项"
+            && RichTextFormatting.todoState(in: todoEditor) == .completed
+            && firstTaskStrike == NSUnderlineStyle.single.rawValue
+            && todoEditor.textStorage?.attribute(.strikethroughStyle, at: 0, effectiveRange: nil) == nil
+        let completedRoundTrip = todoEditor.textStorage
+            .flatMap(RichTextCodec.encode)
+            .flatMap(RichTextCodec.decode)
+        let todoSurvived = completedRoundTrip?.string == todoEditor.string
+            && (completedRoundTrip?.attribute(.strikethroughStyle, at: firstTaskTextRange.location, effectiveRange: nil) as? NSNumber)?.intValue == NSUnderlineStyle.single.rawValue
+        RichTextFormatting.toggleTodo(in: todoEditor)
+        let todoRemoved = todoEditor.string == "第一项\n第二项"
+            && RichTextFormatting.todoState(in: todoEditor) == .plain
+            && todoEditor.textStorage?.attribute(.strikethroughStyle, at: 0, effectiveRange: nil) == nil
+        let todoSelectionPreserved = todoEditor.selectedRange() == NSRange(location: 0, length: todoEditor.string.utf16.count)
+
+        let completedTodoNewlineEditor = NSTextView()
+        completedTodoNewlineEditor.isRichText = true
+        completedTodoNewlineEditor.string = "☑ 已完成"
+        completedTodoNewlineEditor.textStorage?.addAttribute(
+            .strikethroughStyle,
+            value: NSUnderlineStyle.single.rawValue,
+            range: NSRange(location: 2, length: 3)
+        )
+        completedTodoNewlineEditor.typingAttributes = [.strikethroughStyle: NSUnderlineStyle.single.rawValue]
+        completedTodoNewlineEditor.setSelectedRange(NSRange(location: completedTodoNewlineEditor.string.utf16.count, length: 0))
+        let continuedTodo = RichTextFormatting.handleStructuredNewline(in: completedTodoNewlineEditor)
+        let completedTodoNewline = continuedTodo
+            && completedTodoNewlineEditor.string == "☑ 已完成\n☐ "
+            && completedTodoNewlineEditor.typingAttributes[.strikethroughStyle] == nil
+            && completedTodoNewlineEditor.textStorage?.attribute(.strikethroughStyle, at: 2, effectiveRange: nil) != nil
+            && completedTodoNewlineEditor.textStorage?.attribute(.strikethroughStyle, at: 6, effectiveRange: nil) == nil
+
+        let splitCompletedTodoEditor = NSTextView()
+        splitCompletedTodoEditor.isRichText = true
+        splitCompletedTodoEditor.string = "☑ 前后"
+        splitCompletedTodoEditor.textStorage?.addAttribute(
+            .strikethroughStyle,
+            value: NSUnderlineStyle.single.rawValue,
+            range: NSRange(location: 2, length: 2)
+        )
+        splitCompletedTodoEditor.typingAttributes = [.strikethroughStyle: NSUnderlineStyle.single.rawValue]
+        splitCompletedTodoEditor.setSelectedRange(NSRange(location: 3, length: 0))
+        let splitTodo = RichTextFormatting.handleStructuredNewline(in: splitCompletedTodoEditor)
+        let splitCompletedTodo = splitTodo
+            && splitCompletedTodoEditor.string == "☑ 前\n☐ 后"
+            && splitCompletedTodoEditor.textStorage?.attribute(.strikethroughStyle, at: 2, effectiveRange: nil) != nil
+            && splitCompletedTodoEditor.textStorage?.attribute(.strikethroughStyle, at: 6, effectiveRange: nil) == nil
 
         let bulletEditor = NSTextView()
         bulletEditor.isRichText = true
@@ -67,16 +116,36 @@ struct RichTextProbe {
         let bulletsOff = bulletEditor.string == "第一项\n第二项"
         let bulletSelectionPreserved = bulletEditor.selectedRange() == NSRange(location: 0, length: bulletEditor.string.utf16.count)
 
+        let listModeEditor = NSTextView()
+        listModeEditor.isRichText = true
+        listModeEditor.string = "• 项目"
+        listModeEditor.setSelectedRange(NSRange(location: listModeEditor.string.utf16.count, length: 0))
+        RichTextFormatting.toggleTodo(in: listModeEditor)
+        let bulletBecameTodo = listModeEditor.string == "☐ 项目"
+            && RichTextFormatting.todoState(in: listModeEditor) == .pending
+            && !RichTextFormatting.isBulletList(in: listModeEditor)
+        RichTextFormatting.toggleBulletList(in: listModeEditor)
+        let todoBecameBullet = listModeEditor.string == "• 项目"
+            && RichTextFormatting.todoState(in: listModeEditor) == .plain
+            && RichTextFormatting.isBulletList(in: listModeEditor)
+
         let markdownEditor = NSTextView()
         markdownEditor.isRichText = true
         markdownEditor.font = NoteAppearance.bodyFont()
-        markdownEditor.string = "**重点**和~~删除~~\n- 第一项\n* 第二项"
+        markdownEditor.string = "**重点**\n- 第一项\n* 第二项"
         markdownEditor.setSelectedRange(NSRange(location: markdownEditor.string.utf16.count, length: 0))
         let markdownChanged = RichTextFormatting.applyMarkdownSyntax(in: markdownEditor)
         let markdownFont = markdownEditor.textStorage?.attribute(.font, at: 0, effectiveRange: nil) as? NSFont
         let markdownBold = markdownFont.map { NSFontManager.shared.traits(of: $0).contains(.boldFontMask) } ?? false
-        let markdownStrike = (markdownEditor.textStorage?.attribute(.strikethroughStyle, at: 3, effectiveRange: nil) as? Int) == NSUnderlineStyle.single.rawValue
-        let markdownBullets = markdownEditor.string == "重点和删除\n• 第一项\n• 第二项"
+        let markdownBullets = markdownEditor.string == "重点\n• 第一项\n• 第二项"
+
+        let removedStrikeMarkdownEditor = NSTextView()
+        removedStrikeMarkdownEditor.isRichText = true
+        removedStrikeMarkdownEditor.string = "~~不再转换~~"
+        removedStrikeMarkdownEditor.setSelectedRange(NSRange(location: removedStrikeMarkdownEditor.string.utf16.count, length: 0))
+        let strikeMarkdownRemoved = !RichTextFormatting.applyMarkdownSyntax(in: removedStrikeMarkdownEditor)
+            && removedStrikeMarkdownEditor.string == "~~不再转换~~"
+            && removedStrikeMarkdownEditor.textStorage?.attribute(.strikethroughStyle, at: 2, effectiveRange: nil) == nil
 
         let boldMarkdownEditor = NSTextView()
         boldMarkdownEditor.isRichText = true
@@ -97,7 +166,7 @@ struct RichTextProbe {
         emptyBulletEditor.textStorage?.addAttribute(.paragraphStyle, value: listStyle, range: NSRange(location: 0, length: 2))
         emptyBulletEditor.typingAttributes = [.font: NoteAppearance.bodyFont(), .paragraphStyle: listStyle]
         emptyBulletEditor.setSelectedRange(NSRange(location: 2, length: 0))
-        let exitedEmptyBullet = RichTextFormatting.handleListNewline(in: emptyBulletEditor)
+        let exitedEmptyBullet = RichTextFormatting.handleStructuredNewline(in: emptyBulletEditor)
         let exitStyle = emptyBulletEditor.typingAttributes[.paragraphStyle] as? NSParagraphStyle
         let listExitClean = exitedEmptyBullet && emptyBulletEditor.string.isEmpty && (exitStyle?.headIndent ?? 0) == 0
 
@@ -147,7 +216,7 @@ struct RichTextProbe {
         inheritedMarkerEditor.textStorage?.addAttribute(.paragraphStyle, value: inheritedStyle, range: NSRange(location: 5, length: 4))
         inheritedMarkerEditor.typingAttributes = [.font: NoteAppearance.bodyFont(), .paragraphStyle: inheritedStyle]
         inheritedMarkerEditor.setSelectedRange(NSRange(location: inheritedMarkerEditor.string.utf16.count, length: 0))
-        let insertedNestedLine = RichTextFormatting.handleListNewline(in: inheritedMarkerEditor)
+        let insertedNestedLine = RichTextFormatting.handleStructuredNewline(in: inheritedMarkerEditor)
         let inheritedMarker = insertedNestedLine && inheritedMarkerEditor.string.hasSuffix("\n∘ ")
 
         let legacyMarkerEditor = NSTextView()
@@ -167,7 +236,7 @@ struct RichTextProbe {
         orphanBulletEditor.setSelectedRange(NSRange(location: 2, length: 0))
         let orphanPrevented = !RichTextFormatting.adjustBulletLevel(in: orphanBulletEditor, delta: 1)
 
-        print("bold=\(boldSurvived) strike=\(strikeOn && strikeOff && strikeSurvived) bullet=\(bulletSurvived) futureBold=\(futureBoldOn && futureBoldOff) bulletToggle=\(bulletsOn && bulletsOff && bulletSelectionPreserved) markdown=\(markdownChanged && markdownBold && markdownStrike && markdownBullets && trailingIsRegular) listExit=\(listExitClean) nesting=\(multiLevelOn && multiLevelOff && multiLevelSurvived && orphanPrevented && tieredMarkers && inheritedMarker && normalizedLegacyMarker) markerProportions=\(markerProportionsAreBalanced) bytes=\(data.count)")
-        guard boldSurvived, bulletSurvived, strikeSurvived, futureBoldOn, futureBoldOff, strikeOn, strikeOff, bulletsOn, bulletsOff, bulletSelectionPreserved, markdownChanged, markdownBold, markdownStrike, markdownBullets, trailingIsRegular, listExitClean, multiLevelOn, multiLevelOff, multiLevelSurvived, orphanPrevented, tieredMarkers, inheritedMarker, normalizedLegacyMarker, markerProportionsAreBalanced else { exit(1) }
+        print("bold=\(boldSurvived) legacyStrike=\(strikeSurvived) todo=\(todoPending && todoCompleted && todoRemoved && todoSurvived && todoSelectionPreserved && completedTodoNewline && splitCompletedTodo) bullet=\(bulletSurvived) futureBold=\(futureBoldOn && futureBoldOff) bulletToggle=\(bulletsOn && bulletsOff && bulletSelectionPreserved && bulletBecameTodo && todoBecameBullet) markdown=\(markdownChanged && markdownBold && markdownBullets && strikeMarkdownRemoved && trailingIsRegular) listExit=\(listExitClean) nesting=\(multiLevelOn && multiLevelOff && multiLevelSurvived && orphanPrevented && tieredMarkers && inheritedMarker && normalizedLegacyMarker) markerProportions=\(markerProportionsAreBalanced) bytes=\(data.count)")
+        guard boldSurvived, bulletSurvived, strikeSurvived, futureBoldOn, futureBoldOff, todoPending, todoCompleted, todoRemoved, todoSurvived, todoSelectionPreserved, completedTodoNewline, splitCompletedTodo, bulletsOn, bulletsOff, bulletSelectionPreserved, bulletBecameTodo, todoBecameBullet, markdownChanged, markdownBold, markdownBullets, strikeMarkdownRemoved, trailingIsRegular, listExitClean, multiLevelOn, multiLevelOff, multiLevelSurvived, orphanPrevented, tieredMarkers, inheritedMarker, normalizedLegacyMarker, markerProportionsAreBalanced else { exit(1) }
     }
 }

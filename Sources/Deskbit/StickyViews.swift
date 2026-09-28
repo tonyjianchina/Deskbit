@@ -7,7 +7,7 @@ protocol StickyToolbarDelegate: AnyObject {
     func didBeginToolbarDrag(with event: NSEvent)
     func didTapBold()
     func didTapBulletList()
-    func didTapStrikethrough()
+    func didTapTodo()
     func didTapNew()
     func didTapPin()
     func didTapComplete()
@@ -183,16 +183,21 @@ final class StickyFormattingFooterView: NSView {
     let statusLabel = NSTextField(labelWithString: L10n.text("note.saved"))
     private let boldButton: NSButton
     private let bulletButton: NSButton
-    private let strikethroughButton: NSButton
+    private let todoButton: NSButton
 
     override init(frame frameRect: NSRect) {
         boldButton = Self.makeButton(symbol: "bold", tip: L10n.text("format.bold"), action: #selector(toggleBold))
         bulletButton = Self.makeButton(symbol: "list.bullet", tip: L10n.text("format.bullets"), action: #selector(toggleBullet))
-        strikethroughButton = Self.makeButton(symbol: "strikethrough", tip: L10n.text("format.strikethrough"), action: #selector(toggleStrikethrough))
+        todoButton = Self.makeButton(
+            symbol: "checklist",
+            fallbackSymbol: "checkmark.circle",
+            tip: L10n.text("format.todo"),
+            action: #selector(toggleTodo)
+        )
         super.init(frame: frameRect)
         translatesAutoresizingMaskIntoConstraints = false
 
-        let stack = NSStackView(views: [boldButton, bulletButton, strikethroughButton])
+        let stack = NSStackView(views: [boldButton, bulletButton, todoButton])
         stack.orientation = .horizontal
         stack.alignment = .centerY
         stack.spacing = 2
@@ -201,7 +206,7 @@ final class StickyFormattingFooterView: NSView {
 
         boldButton.target = self
         bulletButton.target = self
-        strikethroughButton.target = self
+        todoButton.target = self
         statusLabel.font = NSFont.systemFont(ofSize: 11, weight: .regular)
         statusLabel.textColor = NSColor.black.withAlphaComponent(0.42)
         statusLabel.alignment = .right
@@ -222,21 +227,23 @@ final class StickyFormattingFooterView: NSView {
 
     required init?(coder: NSCoder) { nil }
 
-    func updateFormatting(isBold: Bool, isBulletList: Bool, isStrikethrough: Bool) {
+    func updateFormatting(isBold: Bool, isBulletList: Bool, isTodoItem: Bool) {
         update(button: boldButton, active: isBold)
         update(button: bulletButton, active: isBulletList)
-        update(button: strikethroughButton, active: isStrikethrough)
+        update(button: todoButton, active: isTodoItem)
     }
 
     func refreshLocalization() {
-        for (button, key) in [(boldButton, "format.bold"), (bulletButton, "format.bullets"), (strikethroughButton, "format.strikethrough")] {
+        for (button, key) in [(boldButton, "format.bold"), (bulletButton, "format.bullets"), (todoButton, "format.todo")] {
             button.toolTip = L10n.text(key)
             button.setAccessibilityLabel(L10n.text(key))
         }
     }
 
-    private static func makeButton(symbol: String, tip: String, action: Selector) -> NSButton {
-        let image = NSImage(systemSymbolName: symbol, accessibilityDescription: tip) ?? NSImage(size: NSSize(width: 15, height: 15))
+    private static func makeButton(symbol: String, fallbackSymbol: String? = nil, tip: String, action: Selector) -> NSButton {
+        let image = NSImage(systemSymbolName: symbol, accessibilityDescription: tip)
+            ?? fallbackSymbol.flatMap { NSImage(systemSymbolName: $0, accessibilityDescription: tip) }
+            ?? NSImage(size: NSSize(width: 15, height: 15))
         let button = NSButton(image: image, target: nil, action: action)
         button.isBordered = false
         button.imagePosition = .imageOnly
@@ -255,7 +262,7 @@ final class StickyFormattingFooterView: NSView {
 
     @objc private func toggleBold() { delegate?.didTapBold() }
     @objc private func toggleBullet() { delegate?.didTapBulletList() }
-    @objc private func toggleStrikethrough() { delegate?.didTapStrikethrough() }
+    @objc private func toggleTodo() { delegate?.didTapTodo() }
 }
 
 enum StickyEditingShortcut: Equatable {
@@ -276,8 +283,8 @@ enum StickyEditingShortcut: Equatable {
 final class StickyTextView: NSTextView {
     var onToggleBold: (() -> Void)?
     var onToggleBulletList: (() -> Void)?
-    var onToggleStrikethrough: (() -> Void)?
-    var onListNewline: (() -> Bool)?
+    var onToggleTodo: (() -> Void)?
+    var onStructuredNewline: (() -> Bool)?
     var onAdjustBulletLevel: ((Int) -> Bool)?
 
     override func acceptsFirstMouse(for event: NSEvent?) -> Bool { true }
@@ -295,7 +302,7 @@ final class StickyTextView: NSTextView {
             return true
         }
         if modifiers == [.command, .shift], key == "x" {
-            onToggleStrikethrough?()
+            onToggleTodo?()
             return true
         }
         if let command = StickyEditingShortcut.command(for: modifiers, key: key) {
@@ -311,7 +318,7 @@ final class StickyTextView: NSTextView {
     }
 
     override func insertNewline(_ sender: Any?) {
-        if onListNewline?() == true { return }
+        if onStructuredNewline?() == true { return }
         super.insertNewline(sender)
     }
 

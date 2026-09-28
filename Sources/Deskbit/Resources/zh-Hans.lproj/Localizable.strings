@@ -27,7 +27,7 @@
 "feedback.title" = "把你的想法告诉我们";
 "format.bold" = "加粗（⌘B）";
 "format.bullets" = "项目符号（⌘⇧8；Tab / Shift+Tab 调整级别）";
-"format.strikethrough" = "删除线（⌘⇧X）";
+"format.todo" = "待办事项（⌘⇧X）";
 "history.blankNote" = "空白便签";
 "history.clear" = "清空历史";
 "history.clear.accessibility" = "清空历史便签";
@@ -69,6 +69,6 @@
 "note.saving" = "正在保存…";
 "note.unpin" = "取消置顶";
 "note.untitled" = "空白便签";
-"onboarding.note" = "欢迎使用 Deskbit 👋\n\n新建便签\n点击顶部 +，或点击菜单栏 Deskbit 图标 → 新建便签（⌘N）。\n\n快捷键\n⌘B  加粗\n⌘⇧8  项目符号\n⌘⇧X  删除线\nTab / Shift+Tab  调整项目符号层级\n⌘X / ⌘C / ⌘V / ⌘A  剪切、复制、粘贴、全选\n\n查看历史便签\n点击 ✓ 完成便签，再点击菜单栏 Deskbit 图标 → 历史便签；可恢复或永久删除已完成的便签。\n\n反馈问题\n点击菜单栏 Deskbit 图标 → 用户反馈，填写内容后发送。";
+"onboarding.note" = "欢迎使用 Deskbit 👋\n\n新建便签\n点击顶部 +，或点击菜单栏 Deskbit 图标 → 新建便签（⌘N）。\n\n快捷键\n⌘B  加粗\n⌘⇧8  项目符号\n⌘⇧X  待办事项\nTab / Shift+Tab  调整项目符号层级\n⌘X / ⌘C / ⌘V / ⌘A  剪切、复制、粘贴、全选\n\n查看历史便签\n点击 ✓ 完成便签，再点击菜单栏 Deskbit 图标 → 历史便签；可恢复或永久删除已完成的便签。\n\n反馈问题\n点击菜单栏 Deskbit 图标 → 用户反馈，填写内容后发送。";
 "updates.unavailableBody" = "当前构建未配置 Sparkle 更新源。请前往 Deskbit 的 GitHub Releases 页面下载最新版本。";
 "updates.unavailableTitle" = "当前构建无法检查更新";

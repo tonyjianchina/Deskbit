@@ -8,11 +8,11 @@ struct ShortcutProbe {
         let editor = StickyTextView()
         var boldCount = 0
         var bulletCount = 0
-        var strikeCount = 0
+        var todoCount = 0
         var indentationDeltas: [Int] = []
         editor.onToggleBold = { boldCount += 1 }
         editor.onToggleBulletList = { bulletCount += 1 }
-        editor.onToggleStrikethrough = { strikeCount += 1 }
+        editor.onToggleTodo = { todoCount += 1 }
         editor.onAdjustBulletLevel = { delta in
             indentationDeltas.append(delta)
             return true
@@ -28,8 +28,8 @@ struct ShortcutProbe {
         let bullet = keyEvent(modifiers: [.command, .shift], characters: "*", ignoringModifiers: "*")
         _ = editor.performKeyEquivalent(with: bullet)
 
-        let strike = keyEvent(modifiers: [.command, .shift], characters: "x", ignoringModifiers: "x")
-        _ = editor.performKeyEquivalent(with: strike)
+        let todo = keyEvent(modifiers: [.command, .shift], characters: "x", ignoringModifiers: "x")
+        _ = editor.performKeyEquivalent(with: todo)
 
         editor.insertTab(nil)
         editor.insertBacktab(nil)
@@ -41,10 +41,10 @@ struct ShortcutProbe {
             StickyEditingShortcut.command(for: [.command], key: "a")
         ]
 
-        print("boldShortcut=\(boldCount == 1) bulletShortcut=\(bulletCount == 1) strikeShortcut=\(strikeCount == 1) markdownAsterisk=\(markdownAsteriskPassedThrough) nestingShortcuts=\(indentationDeltas == [1, -1]) editingShortcuts=\(editingShortcuts == [.copy, .cut, .paste, .selectAll])")
+        print("boldShortcut=\(boldCount == 1) bulletShortcut=\(bulletCount == 1) todoShortcut=\(todoCount == 1) markdownAsterisk=\(markdownAsteriskPassedThrough) nestingShortcuts=\(indentationDeltas == [1, -1]) editingShortcuts=\(editingShortcuts == [.copy, .cut, .paste, .selectAll])")
         guard boldCount == 1,
               bulletCount == 1,
-              strikeCount == 1,
+              todoCount == 1,
               markdownAsteriskPassedThrough,
               indentationDeltas == [1, -1],
               editingShortcuts == [.copy, .cut, .paste, .selectAll] else { exit(1) }
