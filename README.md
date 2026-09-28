@@ -123,7 +123,7 @@ open "dist/Deskbit.app"
 
 ```bash
 ./scripts/fetch-sparkle.sh
-SPARKLE_PUBLIC_KEY="你的 Sparkle 公钥" ./scripts/build-app.sh
+MARKETING_VERSION=1.3.0 BUILD_NUMBER=6 SPARKLE_PUBLIC_KEY="你的 Sparkle 公钥" ./scripts/build-app.sh
 ./scripts/make-dmg.sh 1.3.0
 ```
 

@@ -123,7 +123,7 @@ Source builds omit the updater by default. To package a build with Sparkle:
 
 ```bash
 ./scripts/fetch-sparkle.sh
-SPARKLE_PUBLIC_KEY="your Sparkle public key" ./scripts/build-app.sh
+MARKETING_VERSION=1.3.0 BUILD_NUMBER=6 SPARKLE_PUBLIC_KEY="your Sparkle public key" ./scripts/build-app.sh
 ./scripts/make-dmg.sh 1.3.0
 ```
 
