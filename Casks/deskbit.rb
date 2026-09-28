@@ -1,6 +1,6 @@
 cask "deskbit" do
-  version "1.2.2"
-  sha256 "6bb9413d2ced967de2b3bc9fcf8ad8f6e210011837d9e37708a5cbb94e0db659"
+  version "1.3.0"
+  sha256 "c16c0a08dbbcafc2ff07ab01b7ca217db5c90be01f94653b4f2d675f68777eec"
 
   url "https://github.com/tonyjianchina/Deskbit/releases/download/v#{version}/Deskbit-v#{version}-macOS-universal.zip"
   name "Deskbit"
