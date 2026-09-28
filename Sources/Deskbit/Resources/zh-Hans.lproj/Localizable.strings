@@ -68,3 +68,4 @@
 "note.saving" = "正在保存…";
 "note.unpin" = "取消置顶";
 "note.untitled" = "空白便签";
+"onboarding.note" = "欢迎使用 Deskbit 👋\n\n新建便签\n点击顶部 +，或点击菜单栏 Deskbit 图标 → 新建便签（⌘N）。\n\n快捷键\n⌘B  加粗\n⌘⇧8  项目符号\n⌘⇧X  删除线\nTab / Shift+Tab  调整项目符号层级\n⌘X / ⌘C / ⌘V / ⌘A  剪切、复制、粘贴、全选\n\n查看历史便签\n点击 ✓ 完成便签，再点击菜单栏 Deskbit 图标 → 历史便签；可恢复或永久删除已完成的便签。\n\n反馈问题\n点击菜单栏 Deskbit 图标 → 用户反馈，填写内容后发送。";

@@ -33,6 +33,8 @@ final class NoteStore {
     static let shared = NoteStore()
 
     private(set) var notes: [StickyNote] = []
+    private(set) var isFirstLaunch: Bool
+    private let fileURL: URL
     private let encoder: JSONEncoder = {
         let encoder = JSONEncoder()
         encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
@@ -45,13 +47,10 @@ final class NoteStore {
         return decoder
     }()
 
-    private var fileURL: URL {
-        let manager = FileManager.default
-        let base = manager.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
-        return NoteStorage.resolveFileURL(in: base, manager: manager)
-    }
-
-    private init() {
+    init(baseURL: URL? = nil, manager: FileManager = .default) {
+        let base = baseURL ?? manager.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
+        fileURL = NoteStorage.resolveFileURL(in: base, manager: manager)
+        isFirstLaunch = !manager.fileExists(atPath: fileURL.path)
         guard let data = try? Data(contentsOf: fileURL),
               let decoded = try? decoder.decode([StickyNote].self, from: data) else { return }
         notes = decoded
@@ -63,8 +62,9 @@ final class NoteStore {
     func note(id: UUID) -> StickyNote? { notes.first { $0.id == id } }
 
     @discardableResult
-    func add(frame: NSRect? = nil) -> StickyNote {
-        let note = StickyNote.fresh(index: notes.count, frame: frame)
+    func add(frame: NSRect? = nil, text: String = "") -> StickyNote {
+        var note = StickyNote.fresh(index: notes.count, frame: frame)
+        note.text = text
         notes.append(note)
         save()
         return note

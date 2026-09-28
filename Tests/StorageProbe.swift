@@ -2,6 +2,7 @@ import Foundation
 
 @main
 struct StorageProbe {
+    @MainActor
     static func main() throws {
         let manager = FileManager.default
         let root = manager.temporaryDirectory.appendingPathComponent(UUID().uuidString, isDirectory: true)
@@ -35,6 +36,16 @@ struct StorageProbe {
         let fallbackNotes = try Data(contentsOf: fallbackFile)
         precondition(fallbackNotes == savedNotes)
 
-        print("storage migration: pass")
+        let firstLaunchBase = root.appendingPathComponent("first-launch", isDirectory: true)
+        let firstLaunchStore = NoteStore(baseURL: firstLaunchBase, manager: manager)
+        precondition(firstLaunchStore.isFirstLaunch)
+        let guide = firstLaunchStore.add(text: "Welcome to Deskbit")
+        precondition(guide.text == "Welcome to Deskbit")
+
+        let reopenedStore = NoteStore(baseURL: firstLaunchBase, manager: manager)
+        precondition(!reopenedStore.isFirstLaunch)
+        precondition(reopenedStore.activeNotes.map(\.text) == ["Welcome to Deskbit"])
+
+        print("storage migration and first-launch detection: pass")
     }
 }

@@ -28,9 +28,14 @@ final class AppController: NSObject, NSApplicationDelegate, UNUserNotificationCe
         configureStatusItem()
         installDesktopSelectionMonitor()
 
-        let notes = NoteStore.shared.activeNotes
+        let store = NoteStore.shared
+        let notes = store.activeNotes
         if notes.isEmpty {
-            createNote()
+            if store.isFirstLaunch {
+                open(store.add(text: FirstLaunchGuide.text), focus: true)
+            } else {
+                createNote()
+            }
         } else {
             notes.forEach { open($0) }
             if !notes.contains(where: { !$0.isHidden }) { showAllNotes() }
