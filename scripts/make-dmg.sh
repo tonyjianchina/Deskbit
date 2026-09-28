@@ -17,6 +17,15 @@ if [ ! -d "$app" ]; then
   echo "Deskbit.app is missing; run scripts/build-app.sh first" >&2
   exit 1
 fi
+if [ ! -f "$app/Contents/Info.plist" ]; then
+  echo "Deskbit.app is incomplete; run scripts/build-app.sh again" >&2
+  exit 1
+fi
+app_version="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$app/Contents/Info.plist")"
+if [ "$app_version" != "$version" ]; then
+  echo "DMG version $version does not match Deskbit.app version $app_version" >&2
+  exit 1
+fi
 
 output="$root/dist/Deskbit-v${version}-macOS-universal.dmg"
 stage="$(mktemp -d)"

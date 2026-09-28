@@ -13,8 +13,15 @@ if [ -z "$expected_sha256" ]; then
 fi
 root="$(cd "$(dirname "$0")/.." && pwd)"
 destination="$root/Sparkle"
+version_file="$destination/.version"
+checksum_file="$destination/.sha256"
 
-if [ -d "$destination/Sparkle.framework" ] && [ -x "$destination/bin/sign_update" ] && [ -z "${FORCE:-}" ]; then
+if [ -d "$destination/Sparkle.framework" ] \
+  && [ -x "$destination/bin/sign_update" ] \
+  && [ "$(cat "$version_file" 2>/dev/null || true)" = "$version" ] \
+  && [ "$(cat "$checksum_file" 2>/dev/null || true)" = "$expected_sha256" ] \
+  && codesign --verify --deep --strict "$destination/Sparkle.framework" 2>/dev/null \
+  && [ -z "${FORCE:-}" ]; then
   echo "Sparkle $version is already available at $destination"
   exit 0
 fi
@@ -41,6 +48,9 @@ rm -rf "$destination"
 mkdir -p "$destination"
 ditto "$temporary_directory/extracted/Sparkle.framework" "$destination/Sparkle.framework"
 ditto "$temporary_directory/extracted/bin" "$destination/bin"
+printf '%s\n' "$version" > "$version_file"
+printf '%s\n' "$expected_sha256" > "$checksum_file"
 
 test -x "$destination/bin/sign_update"
+codesign --verify --deep --strict "$destination/Sparkle.framework"
 echo "Sparkle $version installed at $destination"

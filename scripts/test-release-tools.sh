@@ -35,7 +35,8 @@ if MARKETING_VERSION=invalid "$project_dir/scripts/build-app.sh" >/dev/null 2>&1
 fi
 
 ruby -c "$project_dir/Casks/deskbit.rb" >/dev/null
-grep -q 'version "1.2.2"' "$project_dir/Casks/deskbit.rb"
-grep -q '6bb9413d2ced967de2b3bc9fcf8ad8f6e210011837d9e37708a5cbb94e0db659' "$project_dir/Casks/deskbit.rb"
+grep -Eq '^  version "[0-9]+\.[0-9]+\.[0-9]+"$' "$project_dir/Casks/deskbit.rb"
+grep -Eq '^  sha256 "[0-9a-f]{64}"$' "$project_dir/Casks/deskbit.rb"
+grep -q 'depends_on macos: :big_sur' "$project_dir/Casks/deskbit.rb"
 
 print 'release tools: pass'

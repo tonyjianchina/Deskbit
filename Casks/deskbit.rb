@@ -7,7 +7,7 @@ cask "deskbit" do
   desc "Native desktop sticky notes with spatial organization"
   homepage "https://github.com/tonyjianchina/Deskbit"
 
-  depends_on :macos
+  depends_on macos: :big_sur
 
   app "Deskbit.app"
 end
