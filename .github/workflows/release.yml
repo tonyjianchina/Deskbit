@@ -1,0 +1,145 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version to release, for example 1.3.0"
+        required: true
+
+permissions:
+  contents: write
+
+concurrency:
+  group: deskbit-release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          fetch-depth: 0
+
+      - name: Resolve release version
+        id: version
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          INPUT_VERSION: ${{ inputs.version }}
+          REF_NAME: ${{ github.ref_name }}
+        run: |
+          if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
+            VERSION="$INPUT_VERSION"
+          else
+            VERSION="${REF_NAME#v}"
+          fi
+          if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "version must use numeric SemVer (X.Y.Z)" >&2
+            exit 1
+          fi
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "tag=v$VERSION" >> "$GITHUB_OUTPUT"
+          echo "build=$(git rev-list --count HEAD)" >> "$GITHUB_OUTPUT"
+
+      - name: Validate Sparkle configuration
+        env:
+          SPARKLE_PUBLIC_KEY: ${{ secrets.SPARKLE_PUBLIC_KEY }}
+          SPARKLE_PRIVATE_KEY: ${{ secrets.SPARKLE_PRIVATE_KEY }}
+        run: |
+          test -n "$SPARKLE_PUBLIC_KEY" || { echo "SPARKLE_PUBLIC_KEY is not configured" >&2; exit 1; }
+          test -n "$SPARKLE_PRIVATE_KEY" || { echo "SPARKLE_PRIVATE_KEY is not configured" >&2; exit 1; }
+
+      - name: Fetch Sparkle
+        run: ./scripts/fetch-sparkle.sh
+
+      - name: Build and test
+        env:
+          MARKETING_VERSION: ${{ steps.version.outputs.version }}
+          BUILD_NUMBER: ${{ steps.version.outputs.build }}
+          SPARKLE_PUBLIC_KEY: ${{ secrets.SPARKLE_PUBLIC_KEY }}
+        run: |
+          ./scripts/build-app.sh release
+          for test_script in scripts/test-*.sh; do "$test_script"; done
+          swift build
+          lipo -info dist/Deskbit.app/Contents/MacOS/Deskbit | grep -q arm64
+          lipo -info dist/Deskbit.app/Contents/MacOS/Deskbit | grep -q x86_64
+          codesign --verify --deep --strict dist/Deskbit.app
+
+      - name: Package release artifacts
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          ./scripts/make-dmg.sh "$VERSION"
+          ditto -c -k --sequesterRsrc --keepParent \
+            dist/Deskbit.app \
+            "dist/Deskbit-v${VERSION}-macOS-universal.zip"
+
+      - name: Sign update and create appcast
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+          BUILD: ${{ steps.version.outputs.build }}
+          TAG: ${{ steps.version.outputs.tag }}
+          SPARKLE_PRIVATE_KEY: ${{ secrets.SPARKLE_PRIVATE_KEY }}
+        run: |
+          KEY_FILE="$(mktemp)"
+          trap 'rm -f "$KEY_FILE"' EXIT
+          printf '%s' "$SPARKLE_PRIVATE_KEY" > "$KEY_FILE"
+          ./scripts/make-appcast.sh \
+            "dist/Deskbit-v${VERSION}-macOS-universal.dmg" \
+            "$KEY_FILE" \
+            "https://github.com/${GITHUB_REPOSITORY}/releases/download/${TAG}/Deskbit-v${VERSION}-macOS-universal.dmg"
+
+      - name: Update Homebrew Cask
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          ZIP="dist/Deskbit-v${VERSION}-macOS-universal.zip"
+          SHA="$(shasum -a 256 "$ZIP" | awk '{print $1}')"
+          sed -i '' -E \
+            -e "s/^  version \"[^\"]+\"/  version \"${VERSION}\"/" \
+            -e "s/^  sha256 \"[0-9a-f]+\"/  sha256 \"${SHA}\"/" \
+            Casks/deskbit.rb
+          ruby -c Casks/deskbit.rb
+
+      - name: Publish GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.version.outputs.version }}
+          TAG: ${{ steps.version.outputs.tag }}
+        run: |
+          ASSETS=(
+            "dist/Deskbit-v${VERSION}-macOS-universal.dmg"
+            "dist/Deskbit-v${VERSION}-macOS-universal.zip"
+          )
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" "${ASSETS[@]}" --clobber
+          else
+            gh release create "$TAG" "${ASSETS[@]}" \
+              --target "$GITHUB_SHA" \
+              --title "Deskbit ${VERSION}" \
+              --generate-notes
+          fi
+
+      - name: Publish update metadata
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          METADATA_DIR="$(mktemp -d)"
+          cp appcast.xml "$METADATA_DIR/appcast.xml"
+          cp Casks/deskbit.rb "$METADATA_DIR/deskbit.rb"
+          git fetch origin main
+          git checkout -B main origin/main
+          cp "$METADATA_DIR/appcast.xml" appcast.xml
+          cp "$METADATA_DIR/deskbit.rb" Casks/deskbit.rb
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add appcast.xml Casks/deskbit.rb
+          if git diff --cached --quiet; then
+            exit 0
+          fi
+          git commit -m "Release ${VERSION}: update distribution metadata"
+          git push origin HEAD:main

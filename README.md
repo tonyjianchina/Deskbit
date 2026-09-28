@@ -16,6 +16,15 @@ Deskbit 用来随手记录任务、灵感和备忘。每张便签都是独立窗
 
 下载 [Deskbit-v1.2.2-macOS-universal.zip](https://github.com/tonyjianchina/Deskbit/releases/download/v1.2.2/Deskbit-v1.2.2-macOS-universal.zip)，或前往 [Releases](https://github.com/tonyjianchina/Deskbit/releases/latest) 查看最新版本。
 
+也可以通过 Homebrew 安装当前正式版本：
+
+```bash
+brew tap tonyjianchina/deskbit https://github.com/tonyjianchina/Deskbit
+brew install --cask deskbit
+```
+
+从下一个版本开始，GitHub Releases 会同时提供 ZIP 和可拖入“应用程序”的 DMG 安装包。
+
 1. 双击 ZIP 解压。
 2. 将 `Deskbit.app` 拖入“应用程序”文件夹。
 3. 在“应用程序”中打开 Deskbit。
@@ -39,6 +48,10 @@ Deskbit 用来随手记录任务、灵感和备忘。每张便签都是独立窗
 在 Deskbit 菜单栏菜单中选择“语言 → 跟随系统 / English / 简体中文”即可切换。手动选择会被记住，应用界面即时更新，无需重启。切换语言不会翻译或修改已有便签内容。
 
 v1.2.2 安装包已包含中英界面，无需从源码构建。
+
+## 应用内更新
+
+包含 Sparkle 的正式构建会在菜单栏菜单中显示“检查更新…”。Deskbit 默认不会在后台自动检查；只有主动点击该菜单项时，才会读取公开的 `appcast.xml` 并下载用户确认安装的新版本。更新包使用独立的 Sparkle EdDSA 密钥验证。
 
 ## 主要功能
 
@@ -88,6 +101,7 @@ v1.2.2 安装包已包含中英界面，无需从源码构建。
 - 数据保存在 `~/Library/Application Support/Deskbit/notes.json`。
 - 旧版数据会在首次启动新版本时自动迁移。
 - Deskbit 没有账号、云同步、广告或遥测上报。
+- 主动检查更新时，Sparkle 只会请求公开的版本清单和安装包，不会上传便签内容。
 - 只有在你主动发送应用内反馈时，填写的反馈正文才会通过第三方服务 FormSubmit 发送给开发者；不会自动附带便签内容。请勿在反馈中填写密码、身份信息等敏感信息。
 
 建议升级或更换电脑前备份上述 `notes.json` 文件。
@@ -105,6 +119,14 @@ open "dist/Deskbit.app"
 
 构建脚本会生成同时支持 Apple Silicon 和 Intel Mac 的 `dist/Deskbit.app`。
 
+默认源码构建不包含更新框架。如需构建带 Sparkle 的安装包：
+
+```bash
+./scripts/fetch-sparkle.sh
+SPARKLE_PUBLIC_KEY="你的 Sparkle 公钥" ./scripts/build-app.sh
+./scripts/make-dmg.sh 1.3.0
+```
+
 ### 运行检查
 
 ```bash
@@ -120,7 +142,23 @@ Sources/Deskbit/   应用源码
 Tests/             功能检查程序
 Tools/             图标生成工具
 scripts/           构建与测试脚本
+Casks/             Homebrew Cask
+.github/workflows/ 自动发布流程
 ```
+
+## 发布维护
+
+发布工作流由 `vX.Y.Z` 标签或 GitHub Actions 手动触发。它会运行检查、构建 Universal App、生成 ZIP 和 DMG、创建 GitHub Release、签署 `appcast.xml`，并更新 Homebrew Cask。
+
+首次发布前需要执行：
+
+```bash
+./scripts/fetch-sparkle.sh
+./Sparkle/bin/generate_keys --account deskbit
+./Sparkle/bin/generate_keys --account deskbit -x deskbit-sparkle-private-key
+```
+
+将第一条命令输出的公钥保存为 GitHub Actions Secret `SPARKLE_PUBLIC_KEY`，将导出的私钥文件内容保存为 `SPARKLE_PRIVATE_KEY`。私钥文件不得提交到仓库，完成配置后应转移到安全存储并删除工作副本。
 
 ## 当前状态
 

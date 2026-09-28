@@ -16,6 +16,15 @@ Keep tasks, ideas, and reminders on your desktop. Each note is an independent wi
 
 Download [Deskbit-v1.2.2-macOS-universal.zip](https://github.com/tonyjianchina/Deskbit/releases/download/v1.2.2/Deskbit-v1.2.2-macOS-universal.zip), or visit [Releases](https://github.com/tonyjianchina/Deskbit/releases/latest) for the latest version.
 
+You can also install the current release with Homebrew:
+
+```bash
+brew tap tonyjianchina/deskbit https://github.com/tonyjianchina/Deskbit
+brew install --cask deskbit
+```
+
+Starting with the next release, GitHub Releases will provide both a ZIP archive and a drag-to-Applications DMG.
+
 1. Double-click the ZIP file to extract it.
 2. Drag `Deskbit.app` into your Applications folder.
 3. Open Deskbit from Applications.
@@ -39,6 +48,10 @@ Deskbit v1.2.2 and later provide English and Simplified Chinese translations; a 
 Open Deskbit's menu bar menu and choose **Language → Follow System / English / 简体中文**. Deskbit remembers your choice and updates its interface immediately, with no restart required. Changing the language does not translate or modify your existing notes.
 
 The v1.2.2 download includes both interface languages. No source build is required.
+
+## In-app updates
+
+Release builds that include Sparkle show **Check for Updates…** in the menu bar menu. Deskbit does not check automatically in the background. It reads the public `appcast.xml` only when you choose that command, then downloads an update after you confirm. Update archives are verified with a dedicated Sparkle EdDSA key.
 
 ## Features
 
@@ -88,6 +101,7 @@ Select text to cut, copy, and paste with `⌘X`, `⌘C`, and `⌘V`. Use `⌘A` 
 - Notes are saved in `~/Library/Application Support/Deskbit/notes.json`.
 - Data from older versions is migrated automatically when you first launch a newer version.
 - Deskbit has no accounts, cloud sync, ads, or telemetry.
+- When you check for updates, Sparkle requests only the public update feed and installer. Note contents are never uploaded.
 - If you choose to send in-app feedback, the text you enter is sent to the developer through the third-party service FormSubmit. Your notes are not attached automatically. Do not include passwords, identity details, or other sensitive information in your feedback.
 
 Back up your `notes.json` file before upgrading or moving to another Mac.
@@ -105,6 +119,14 @@ open "dist/Deskbit.app"
 
 The build script creates `dist/Deskbit.app` as a universal app for Apple Silicon and Intel Macs.
 
+Source builds omit the updater by default. To package a build with Sparkle:
+
+```bash
+./scripts/fetch-sparkle.sh
+SPARKLE_PUBLIC_KEY="your Sparkle public key" ./scripts/build-app.sh
+./scripts/make-dmg.sh 1.3.0
+```
+
 ### Run checks
 
 ```bash
@@ -120,7 +142,23 @@ Sources/Deskbit/   App source code
 Tests/             Functional check programs
 Tools/             Icon generation tools
 scripts/           Build and test scripts
+Casks/             Homebrew Cask
+.github/workflows/ Automated release workflow
 ```
+
+## Maintaining releases
+
+The release workflow is triggered by a `vX.Y.Z` tag or manually in GitHub Actions. It runs the checks, builds the universal app, creates ZIP and DMG artifacts, publishes a GitHub Release, signs `appcast.xml`, and updates the Homebrew Cask.
+
+Before the first release, generate and export a dedicated Sparkle key:
+
+```bash
+./scripts/fetch-sparkle.sh
+./Sparkle/bin/generate_keys --account deskbit
+./Sparkle/bin/generate_keys --account deskbit -x deskbit-sparkle-private-key
+```
+
+Save the printed public key as the GitHub Actions secret `SPARKLE_PUBLIC_KEY`, and save the exported private-key file contents as `SPARKLE_PRIVATE_KEY`. Never commit the private key; move it to secure storage and remove the working copy after configuring the repository.
 
 ## Project status
 

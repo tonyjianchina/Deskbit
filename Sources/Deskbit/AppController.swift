@@ -248,6 +248,10 @@ final class AppController: NSObject, NSApplicationDelegate, UNUserNotificationCe
         DispatchQueue.main.async { feedbackViewController.focusEditor() }
     }
 
+    @objc func checkForUpdatesFromMenu() {
+        Updater.shared.checkForUpdates()
+    }
+
     private func confirmDeleteHistoryNote(id: UUID) {
         dismissHistoryPopover()
         NSApp.activate(ignoringOtherApps: true)
