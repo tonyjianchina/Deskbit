@@ -68,4 +68,4 @@
 "note.saving" = "Saving…";
 "note.unpin" = "Unpin";
 "note.untitled" = "Untitled Note";
-"onboarding.note" = "Welcome to Deskbit 👋\n\nCreate a note\nClick + at the top, or choose New Note from the menu bar Deskbit icon (⌘N).\n\nShortcuts\n⌘B  Bold\n⌘⇧8  Bullets\n⌘⇧X  To-do item\nTab / Shift+Tab  Change bullet level\n⌘X / ⌘C / ⌘V / ⌘A  Cut, copy, paste, select all\n\nView Note History\nClick ✓ to complete a note, then choose Note History from the menu bar Deskbit icon. You can restore or permanently delete completed notes.\n\nReport a problem\nChoose Send Feedback from the menu bar Deskbit icon, enter the details, and send.";
+"onboarding.note" = "Welcome to Deskbit 👋\n\n**Shortcuts**\n⌘N New Note\n⌘B  Bold\nTab / Shift+Tab  Change bullet level\n\n**Arrange Notes**\nClick the top-left button to neatly arrange multiple notes.\n\n**View Note History**\nClick ✓ to complete a note, then choose Note History from the menu bar Deskbit icon. You can restore or permanently delete completed notes.\n\n**Report a Problem**\nChoose Send Feedback from the menu bar Deskbit icon, enter the details, and send.";

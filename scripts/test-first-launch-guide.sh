@@ -7,6 +7,7 @@ trap 'rm -f "$probe_binary"' EXIT
 
 swiftc \
   "$project_dir/Sources/Deskbit/Localization.swift" \
+  "$project_dir/Sources/Deskbit/NoteAppearance.swift" \
   "$project_dir/Sources/Deskbit/FirstLaunchGuide.swift" \
   "$project_dir/Tests/FirstLaunchGuideProbe.swift" \
   -o "$probe_binary"

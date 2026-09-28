@@ -70,6 +70,16 @@ final class NoteStore {
         return note
     }
 
+    @discardableResult
+    func add(frame: NSRect? = nil, attributedText: NSAttributedString) -> StickyNote {
+        var note = StickyNote.fresh(index: notes.count, frame: frame)
+        note.text = attributedText.string
+        note.richTextData = RichTextCodec.encode(attributedText)
+        notes.append(note)
+        save()
+        return note
+    }
+
     func update(_ note: StickyNote) {
         guard let index = notes.firstIndex(where: { $0.id == note.id }) else { return }
         var changed = note

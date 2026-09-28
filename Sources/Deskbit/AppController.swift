@@ -32,7 +32,8 @@ final class AppController: NSObject, NSApplicationDelegate, UNUserNotificationCe
         let notes = store.activeNotes
         if notes.isEmpty {
             if store.isFirstLaunch {
-                open(store.add(text: FirstLaunchGuide.text), focus: true)
+                let guide = store.add(attributedText: FirstLaunchGuide.attributedText)
+                open(guide, focus: true)
             } else {
                 createNote()
             }
