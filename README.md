@@ -25,9 +25,8 @@ brew install --cask deskbit
 
 从下一个版本开始，GitHub Releases 会同时提供 ZIP 和可拖入“应用程序”的 DMG 安装包。
 
-1. 双击 ZIP 解压。
-2. 将 `Deskbit.app` 拖入“应用程序”文件夹。
-3. 在“应用程序”中打开 Deskbit。
+1. 下载 DMG 后打开，将 `Deskbit.app` 拖入“应用程序”文件夹；或下载 ZIP，解压后拖入该文件夹。
+2. 在“应用程序”中打开 Deskbit。
 
 > [!IMPORTANT]
 > v1.2.2 已进行本地代码签名，但尚未经过 Apple Developer ID 签名和公证。首次打开可能被 macOS 拦截。请先尝试打开一次，再按系统版本放行：
@@ -48,10 +47,6 @@ brew install --cask deskbit
 在 Deskbit 菜单栏菜单中选择“语言 → 跟随系统 / English / 简体中文”即可切换。手动选择会被记住，应用界面即时更新，无需重启。切换语言不会翻译或修改已有便签内容。
 
 v1.2.2 安装包已包含中英界面，无需从源码构建。
-
-## 应用内更新
-
-包含 Sparkle 的正式构建会在菜单栏菜单中显示“检查更新…”。Deskbit 默认不会在后台自动检查；只有主动点击该菜单项时，才会读取公开的 `appcast.xml` 并下载用户确认安装的新版本。更新包使用独立的 Sparkle EdDSA 密钥验证。
 
 ## 主要功能
 
@@ -101,7 +96,6 @@ v1.2.2 安装包已包含中英界面，无需从源码构建。
 - 数据保存在 `~/Library/Application Support/Deskbit/notes.json`。
 - 旧版数据会在首次启动新版本时自动迁移。
 - Deskbit 没有账号、云同步、广告或遥测上报。
-- 主动检查更新时，Sparkle 只会请求公开的版本清单和安装包，不会上传便签内容。
 - 只有在你主动发送应用内反馈时，填写的反馈正文才会通过第三方服务 FormSubmit 发送给开发者；不会自动附带便签内容。请勿在反馈中填写密码、身份信息等敏感信息。
 
 建议升级或更换电脑前备份上述 `notes.json` 文件。
@@ -119,11 +113,10 @@ open "dist/Deskbit.app"
 
 构建脚本会生成同时支持 Apple Silicon 和 Intel Mac 的 `dist/Deskbit.app`。
 
-默认源码构建不包含更新框架。如需构建带 Sparkle 的安装包：
+如需生成 DMG 安装包：
 
 ```bash
-./scripts/fetch-sparkle.sh
-MARKETING_VERSION=1.3.0 BUILD_NUMBER=6 SPARKLE_PUBLIC_KEY="你的 Sparkle 公钥" ./scripts/build-app.sh
+MARKETING_VERSION=1.3.0 BUILD_NUMBER=6 ./scripts/build-app.sh
 ./scripts/make-dmg.sh 1.3.0
 ```
 
@@ -148,17 +141,7 @@ Casks/             Homebrew Cask
 
 ## 发布维护
 
-发布工作流由 `vX.Y.Z` 标签或 GitHub Actions 手动触发。它会运行检查、构建 Universal App、生成 ZIP 和 DMG、创建 GitHub Release、签署 `appcast.xml`，并更新 Homebrew Cask。
-
-首次发布前需要执行：
-
-```bash
-./scripts/fetch-sparkle.sh
-./Sparkle/bin/generate_keys --account deskbit
-./Sparkle/bin/generate_keys --account deskbit -x deskbit-sparkle-private-key
-```
-
-将第一条命令输出的公钥保存为 GitHub Actions Secret `SPARKLE_PUBLIC_KEY`，将导出的私钥文件内容保存为 `SPARKLE_PRIVATE_KEY`。私钥文件不得提交到仓库，完成配置后应转移到安全存储并删除工作副本。
+发布工作流由 `vX.Y.Z` 标签或 GitHub Actions 手动触发。它会运行检查、构建 Universal App、生成 ZIP 和 DMG、创建 GitHub Release，并更新 Homebrew Cask。不需要额外配置 GitHub Actions Secrets。
 
 ## 当前状态
 

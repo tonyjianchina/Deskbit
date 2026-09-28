@@ -7,7 +7,6 @@ import AppKit
     func showHistoryFromMenu()
     func showAllNotes()
     func showFeedbackFromMenu()
-    func checkForUpdatesFromMenu()
     func changeLanguage(_ sender: NSMenuItem)
     func quit()
 }
@@ -37,12 +36,6 @@ enum DeskbitStatusMenu {
             L10n.text("menu.feedback"),
             action: #selector(DeskbitStatusMenuTarget.showFeedbackFromMenu),
             symbol: "bubble.left.and.bubble.right",
-            target: target
-        ))
-        menu.addItem(item(
-            L10n.text("menu.checkForUpdates"),
-            action: #selector(DeskbitStatusMenuTarget.checkForUpdatesFromMenu),
-            symbol: "arrow.triangle.2.circlepath",
             target: target
         ))
         menu.addItem(.separator())
