@@ -62,6 +62,7 @@ jobs:
           VERSION: ${{ steps.version.outputs.version }}
         run: |
           ./scripts/make-dmg.sh "$VERSION"
+          cp "dist/Deskbit-v${VERSION}-macOS-universal.dmg" "dist/Deskbit-macOS-universal.dmg"
           ditto -c -k --sequesterRsrc --keepParent \
             dist/Deskbit.app \
             "dist/Deskbit-v${VERSION}-macOS-universal.zip"
@@ -85,6 +86,7 @@ jobs:
           TAG: ${{ steps.version.outputs.tag }}
         run: |
           ASSETS=(
+            "dist/Deskbit-macOS-universal.dmg"
             "dist/Deskbit-v${VERSION}-macOS-universal.dmg"
             "dist/Deskbit-v${VERSION}-macOS-universal.zip"
           )

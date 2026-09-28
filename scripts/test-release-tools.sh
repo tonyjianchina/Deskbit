@@ -12,5 +12,8 @@ ruby -c "$project_dir/Casks/deskbit.rb" >/dev/null
 grep -Eq '^  version "[0-9]+\.[0-9]+\.[0-9]+"$' "$project_dir/Casks/deskbit.rb"
 grep -Eq '^  sha256 "[0-9a-f]{64}"$' "$project_dir/Casks/deskbit.rb"
 grep -q 'depends_on macos: :big_sur' "$project_dir/Casks/deskbit.rb"
+grep -Fq 'cp "dist/Deskbit-v${VERSION}-macOS-universal.dmg" "dist/Deskbit-macOS-universal.dmg"' "$project_dir/.github/workflows/release.yml"
+sed -n '/^[[:space:]]*ASSETS=(/,/^[[:space:]]*)/p' "$project_dir/.github/workflows/release.yml" \
+  | grep -Fq '"dist/Deskbit-macOS-universal.dmg"'
 
 print 'release tools: pass'
