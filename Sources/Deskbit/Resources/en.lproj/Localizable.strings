@@ -46,6 +46,7 @@
 "language.title" = "Language";
 "menu.about" = "About Deskbit";
 "menu.arrange" = "Arrange Notes";
+"menu.checkForUpdates" = "Check for Updates…";
 "menu.copy" = "Copy";
 "menu.cut" = "Cut";
 "menu.edit" = "Edit";
@@ -69,3 +70,5 @@
 "note.unpin" = "Unpin";
 "note.untitled" = "Untitled Note";
 "onboarding.note" = "Welcome to Deskbit 👋\n\n**Shortcuts**\n⌘N New Note\n⌘B  Bold\nTab / Shift+Tab  Change bullet level\n\n**Arrange Notes**\nClick the top-left button to neatly arrange multiple notes.\n\n**View Note History**\nClick ✓ to complete a note, then choose Note History from the menu bar Deskbit icon. You can restore or permanently delete completed notes.\n\n**Report a Problem**\nChoose Send Feedback from the menu bar Deskbit icon, enter the details, and send.";
+"updates.unavailableBody" = "This build does not include a configured Sparkle update feed. Download the latest version from the Deskbit GitHub Releases page.";
+"updates.unavailableTitle" = "Updates Aren't Available in This Build";

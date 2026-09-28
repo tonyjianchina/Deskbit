@@ -27,6 +27,7 @@ final class AppController: NSObject, NSApplicationDelegate, UNUserNotificationCe
         configureMainMenu()
         configureStatusItem()
         installDesktopSelectionMonitor()
+        Updater.shared.start()
 
         let store = NoteStore.shared
         let notes = store.activeNotes
@@ -247,6 +248,10 @@ final class AppController: NSObject, NSApplicationDelegate, UNUserNotificationCe
         windowController.showWindow(nil)
         windowController.window?.makeKeyAndOrderFront(nil)
         DispatchQueue.main.async { feedbackViewController.focusEditor() }
+    }
+
+    @objc func checkForUpdatesFromMenu() {
+        Updater.shared.checkForUpdates()
     }
 
     private func confirmDeleteHistoryNote(id: UUID) {

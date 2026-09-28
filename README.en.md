@@ -48,6 +48,10 @@ Open Deskbit's menu bar menu and choose **Language → Follow System / English /
 
 The v1.2.2 download includes both interface languages. No source build is required.
 
+## In-app updates
+
+Release builds use Sparkle for updates. After launch, Deskbit periodically reads the public `appcast.xml` feed and prompts when a new version can be downloaded, installed, and relaunched. You can also choose **Check for Updates…** from the Deskbit menu bar menu. Update archives are verified with a dedicated Sparkle EdDSA key.
+
 ## Features
 
 - Four note colors: yellow, blue, green, and pink
@@ -96,6 +100,7 @@ Select text to cut, copy, and paste with `⌘X`, `⌘C`, and `⌘V`. Use `⌘A` 
 - Notes are saved in `~/Library/Application Support/Deskbit/notes.json`.
 - Data from older versions is migrated automatically when you first launch a newer version.
 - Deskbit has no accounts, cloud sync, ads, or telemetry.
+- During update checks, Sparkle requests only the public update feed and installer. Note contents are never uploaded.
 - If you choose to send in-app feedback, the text you enter is sent to the developer through the third-party service FormSubmit. Your notes are not attached automatically. Do not include passwords, identity details, or other sensitive information in your feedback.
 
 Back up your `notes.json` file before upgrading or moving to another Mac.
@@ -113,10 +118,11 @@ open "dist/Deskbit.app"
 
 The build script creates `dist/Deskbit.app` as a universal app for Apple Silicon and Intel Macs.
 
-To create a DMG installer:
+Source builds omit the updater by default. To package a build with Sparkle:
 
 ```bash
-MARKETING_VERSION=1.3.0 BUILD_NUMBER=6 ./scripts/build-app.sh
+./scripts/fetch-sparkle.sh
+MARKETING_VERSION=1.3.0 BUILD_NUMBER=6 SPARKLE_PUBLIC_KEY="your Sparkle public key" ./scripts/build-app.sh
 ./scripts/make-dmg.sh 1.3.0
 ```
 
@@ -141,7 +147,17 @@ Casks/             Homebrew Cask
 
 ## Maintaining releases
 
-The release workflow is triggered by a `vX.Y.Z` tag or manually in GitHub Actions. It runs the checks, builds the universal app, creates ZIP and DMG artifacts, publishes a GitHub Release, and updates the Homebrew Cask. No additional GitHub Actions secrets are required.
+The release workflow is triggered by a `vX.Y.Z` tag or manually in GitHub Actions. It runs the checks, builds the universal app, creates ZIP and DMG artifacts, publishes a GitHub Release, signs and updates `appcast.xml`, and updates the Homebrew Cask.
+
+Before the first release, generate and export a dedicated Sparkle key:
+
+```bash
+./scripts/fetch-sparkle.sh
+./Sparkle/bin/generate_keys --account deskbit
+./Sparkle/bin/generate_keys --account deskbit -x deskbit-sparkle-private-key
+```
+
+Save the printed public key as the GitHub Actions secret `SPARKLE_PUBLIC_KEY`, and save the exported private-key file contents as `SPARKLE_PRIVATE_KEY`. Never commit the private key; move it to secure storage and remove the working copy after configuring the repository.
 
 ## Project status
 

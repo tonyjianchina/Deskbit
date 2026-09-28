@@ -94,6 +94,7 @@ private final class LocalizationMenuTarget: NSObject, DeskbitStatusMenuTarget {
     @objc func showHistoryFromMenu() {}
     @objc func showAllNotes() {}
     @objc func showFeedbackFromMenu() {}
+    @objc func checkForUpdatesFromMenu() {}
     @objc func changeLanguage(_ sender: NSMenuItem) {}
     @objc func quit() {}
 }
