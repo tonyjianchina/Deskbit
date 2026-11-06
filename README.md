@@ -14,7 +14,7 @@ Deskbit 用来随手记录任务、灵感和备忘。每张便签都是独立窗
 
 ## 下载与安装
 
-下载 [Deskbit-v1.2.2-macOS-universal.zip](https://github.com/tonyjianchina/Deskbit/releases/download/v1.2.2/Deskbit-v1.2.2-macOS-universal.zip)，或前往 [Releases](https://github.com/tonyjianchina/Deskbit/releases/latest) 查看最新版本。
+下载当前正式版 [Deskbit-v1.3.0-macOS-universal.zip](https://github.com/tonyjianchina/Deskbit/releases/download/v1.3.0/Deskbit-v1.3.0-macOS-universal.zip)，或使用可直接拖入“应用程序”的 [Deskbit-v1.3.0-macOS-universal.dmg](https://github.com/tonyjianchina/Deskbit/releases/download/v1.3.0/Deskbit-v1.3.0-macOS-universal.dmg)。此后的版本请以 [Releases 最新版本](https://github.com/tonyjianchina/Deskbit/releases/latest) 为准。
 
 也可以通过 Homebrew 安装当前正式版本：
 
@@ -23,13 +23,13 @@ brew tap tonyjianchina/deskbit https://github.com/tonyjianchina/Deskbit
 brew install --cask deskbit
 ```
 
-从下一个版本开始，GitHub Releases 会同时提供 ZIP 和可拖入“应用程序”的 DMG 安装包。
+当前正式版同时提供 ZIP 和可拖入“应用程序”的 DMG 安装包。
 
 1. 下载 DMG 后打开，将 `Deskbit.app` 拖入“应用程序”文件夹；或下载 ZIP，解压后拖入该文件夹。
 2. 在“应用程序”中打开 Deskbit。
 
 > [!IMPORTANT]
-> v1.2.2 已进行本地代码签名，但尚未经过 Apple Developer ID 签名和公证。首次打开可能被 macOS 拦截。请先尝试打开一次，再按系统版本放行：
+> v1.3.0 已进行本地代码签名，但尚未经过 Apple Developer ID 签名和公证。首次打开可能被 macOS 拦截。请先尝试打开一次，再按系统版本放行：
 > - macOS 13 或更高版本：“系统设置 → 隐私与安全性”，在安全性区域点击“仍要打开”。
 > - macOS 11–12：“系统偏好设置 → 安全性与隐私 → 通用”，点击“仍要打开”。
 >
@@ -46,7 +46,7 @@ brew install --cask deskbit
 
 在 Deskbit 菜单栏菜单中选择“语言 → 跟随系统 / English / 简体中文”即可切换。手动选择会被记住，应用界面即时更新，无需重启。切换语言不会翻译或修改已有便签内容。
 
-v1.2.2 安装包已包含中英界面，无需从源码构建。
+v1.3.0 安装包已包含中英界面，无需从源码构建。
 
 ## 应用内更新
 

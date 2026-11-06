@@ -14,7 +14,7 @@ Keep tasks, ideas, and reminders on your desktop. Each note is an independent wi
 
 ## Download and install
 
-Download [Deskbit-v1.2.2-macOS-universal.zip](https://github.com/tonyjianchina/Deskbit/releases/download/v1.2.2/Deskbit-v1.2.2-macOS-universal.zip), or visit [Releases](https://github.com/tonyjianchina/Deskbit/releases/latest) for the latest version.
+Download the current release, [Deskbit-v1.3.0-macOS-universal.zip](https://github.com/tonyjianchina/Deskbit/releases/download/v1.3.0/Deskbit-v1.3.0-macOS-universal.zip), or the drag-to-Applications [Deskbit-v1.3.0-macOS-universal.dmg](https://github.com/tonyjianchina/Deskbit/releases/download/v1.3.0/Deskbit-v1.3.0-macOS-universal.dmg). For anything newer, use the [latest release](https://github.com/tonyjianchina/Deskbit/releases/latest).
 
 You can also install the current release with Homebrew:
 
@@ -23,13 +23,13 @@ brew tap tonyjianchina/deskbit https://github.com/tonyjianchina/Deskbit
 brew install --cask deskbit
 ```
 
-Starting with the next release, GitHub Releases will provide both a ZIP archive and a drag-to-Applications DMG.
+The current release provides both a ZIP archive and a drag-to-Applications DMG.
 
 1. Open the downloaded DMG and drag `Deskbit.app` into Applications, or extract the ZIP and drag the app there.
 2. Open Deskbit from Applications.
 
 > [!IMPORTANT]
-> v1.2.2 uses a local ad hoc code signature. It is not signed with an Apple Developer ID or notarized by Apple, so macOS may block it the first time you open it. Try opening it once, then allow it using the steps for your macOS version:
+> v1.3.0 uses a local ad hoc code signature. It is not signed with an Apple Developer ID or notarized by Apple, so macOS may block it the first time you open it. Try opening it once, then allow it using the steps for your macOS version:
 > - macOS 13 or later: Open **System Settings → Privacy & Security**, then click **Open Anyway** in the Security section.
 > - macOS 11–12: Open **System Preferences → Security & Privacy → General**, then click **Open Anyway**.
 >
@@ -46,7 +46,7 @@ Deskbit v1.2.2 and later provide English and Simplified Chinese translations; a 
 
 Open Deskbit's menu bar menu and choose **Language → Follow System / English / 简体中文**. Deskbit remembers your choice and updates its interface immediately, with no restart required. Changing the language does not translate or modify your existing notes.
 
-The v1.2.2 download includes both interface languages. No source build is required.
+The v1.3.0 download includes both interface languages. No source build is required.
 
 ## In-app updates
 
